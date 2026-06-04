@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="REPORTpro">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="manifest" href="data:application/manifest+json,{&quot;name&quot;:&quot;REPORTpro&quot;,&quot;short_name&quot;:&quot;REPORTpro&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%23f1f5f9&quot;,&quot;theme_color&quot;:&quot;%231d4ed8&quot;,&quot;dir&quot;:&quot;rtl&quot;,&quot;lang&quot;:&quot;he&quot;,&quot;start_url&quot;:&quot;.&quot;}">
+<title>REPORTpro · פיקוח עליון ובקרה הנדסית</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&amp;family=Rubik:wght@500;600;700;800&amp;display=swap">
+<style>
+  :root{
+    --blue:#1d4ed8; --ink:#0f172a; --muted:#64748b;
+    --line:#e2e8f0; --bg:#f1f5f9; --card:#fff;
+    --font-body:'Heebo',system-ui,-apple-system,sans-serif;
+    --font-head:'Rubik',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font-body);background:var(--bg);color:var(--ink);direction:rtl;-webkit-text-size-adjust:100%}
+  button{font-family:var(--font-body);cursor:pointer}
+  input,textarea,select{font-family:var(--font-body)}
+  .hidden{display:none!important}
+
+  header{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+  .h-inner{max-width:920px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;background:none;border:none;padding:0}
+  .tri{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#dc2626,#b91c1c);display:flex;align-items:center;justify-content:center}
+  .brand-name{font-family:var(--font-head);font-weight:800;font-size:16px;line-height:1.2;text-align:right;color:var(--ink)}
+  .brand-sub-inline{font-weight:600;font-size:13px;color:var(--muted)}
+  .brand-sub{font-size:11px;color:var(--muted);text-align:right}
+  .h-right{display:flex;align-items:center;gap:8px}
+  .link-btn{display:flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;color:#334155}
+  .flash{display:none;align-items:center;gap:4px;color:#16a34a;font-size:13px;font-weight:700;background:#f0fdf4;padding:5px 10px;border-radius:8px}
+  .flash.show{display:flex}
+
+  .container{max-width:920px;margin:0 auto;padding:20px 14px;padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+
+  .list-top{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+  .page-title{font-family:var(--font-head);font-size:26px;font-weight:800;margin:0}
+  .page-sub{color:var(--muted);margin:4px 0 0;font-size:14px}
+  .btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(29,78,216,.25)}
+  .btn-ghost-sm{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:700;color:#334155}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+
+  /* folder chips */
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
+  .chip{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;background:#fff;border:1.5px solid var(--line);border-radius:22px;padding:8px 14px;font-size:13.5px;font-weight:700;color:#334155;flex-shrink:0}
+  .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .chip .cnt{font-size:11px;opacity:.7}
+  .chip-add{border-style:dashed;color:var(--blue);border-color:#bfdbfe}
+
+  .empty{text-align:center;padding:60px 20px;background:#fff;border-radius:14px;border:1px dashed #cbd5e1}
+  .empty p{margin:12px 0 0;color:var(--muted);font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+  .card{position:relative;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;cursor:pointer;transition:box-shadow .15s,transform .12s,background .15s}
+  .card:hover{box-shadow:0 3px 12px rgba(0,0,0,.1)}
+  .card-selected{border:2.5px solid var(--blue);background:#eff6ff;box-shadow:0 0 0 4px rgba(29,78,216,.2),0 6px 18px rgba(29,78,216,.22)}
+  .card-selected .card-title{color:var(--blue)}
+  .card-check{position:absolute;top:10px;inset-inline-end:10px;z-index:2;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(29,78,216,.4)}
+  .card-check svg{width:18px;height:18px}
+  .sel-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;color:#fff;background:var(--blue);padding:2px 8px;border-radius:20px;vertical-align:middle}
+  .sel-badge svg{width:12px;height:12px}
+  .card-accent{width:5px;background:var(--blue)}
+  .card-body{padding:16px 18px;flex:1;min-width:0}
+  .card-title{font-family:var(--font-head);font-weight:700;font-size:15.5px;line-height:1.3;margin-bottom:8px}
+  .card-meta{display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--muted);margin-bottom:10px}
+  .card-meta span{display:inline-flex;align-items:center;gap:4px}
+  .card-tpl{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:#475569;margin-bottom:10px;font-weight:600}
+  .card-tpl .sw{width:11px;height:11px;border-radius:3px}
+  .pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .pill{font-size:11.5px;font-weight:600;background:#f1f5f9;color:#475569;padding:3px 9px;border-radius:20px;border:1px solid var(--line)}
+  .pill.high{background:#fef2f2;color:#dc2626;border-color:#fecaca}
+  .card-folder-row{display:flex;align-items:center;gap:6px;margin-bottom:12px}
+  .mini-sel{font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:#f8fafc;color:#475569;max-width:100%}
+  .card-actions{display:flex;gap:6px;align-items:center}
+  .card-edit{flex:1;background:#eff6ff;color:var(--blue);border:1px solid #bfdbfe;border-radius:8px;padding:8px;font-weight:700;font-size:13.5px}
+  .icon-sq{background:#f8fafc;border:1px solid var(--line);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:#475569}
+  .icon-sq.danger{color:#dc2626}
+
+  .section{background:#fff;border-radius:14px;border:1px solid var(--line);padding:16px 16px 18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .sec-head{display:flex;align-items:center;gap:9px;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #f1f5f9}
+  .sec-icon{width:32px;height:32px;border-radius:8px;background:#eff6ff;color:var(--blue);display:flex;align-items:center;justify-content:center}
+  .sec-title{font-family:var(--font-head);font-size:17px;font-weight:700;margin:0}
+  .field-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .full{grid-column:1/-1}
+  label.lbl{display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#475569;margin-bottom:6px}
+  .input{width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;background:#fff;color:var(--ink);outline:none}
+  .input:focus{border-color:var(--blue)}
+  textarea.input{min-height:70px;resize:vertical}
+  select.input{cursor:pointer}
+
+  .zone{background:#fff;border-radius:14px;border:1px solid var(--line);margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);overflow:hidden}
+  .zone-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:#f8fafc;border-bottom:1px solid #eef2f7}
+  .zone-num{width:28px;height:28px;border-radius:8px;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+  .zone-title-input{flex:1;border:none;background:transparent;font-size:15.5px;font-weight:700;font-family:var(--font-head);color:var(--ink);outline:none;min-width:0}
+  .zone-acts{display:flex;gap:4px}
+  .icon-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:#475569}
+  .icon-btn:disabled{opacity:.35}
+  .icon-btn.danger{color:#dc2626}
+  .zone-body{padding:4px 14px 14px}
+
+  .defect{display:flex;gap:12px;padding:14px 0;border-bottom:1px dashed #e8edf3}
+  .defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);font-size:14px;min-width:34px;padding-top:4px}
+  .img-col{width:130px;flex-shrink:0}
+  .img-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+  .thumb{width:100%;height:110px;object-fit:cover;display:block}
+  .img-remove{position:absolute;top:5px;inset-inline-end:5px;width:24px;height:24px;border-radius:50%;background:rgba(15,23,42,.7);color:#fff;border:none;display:flex;align-items:center;justify-content:center}
+  .img-ph{height:110px;border-radius:10px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#cbd5e1;font-size:12px}
+  .img-btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .img-btn{flex:1 1 calc(50% - 3px)}
+  .img-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11.5px;font-weight:600;padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#334155}
+  .defect-body{flex:1;min-width:0}
+  .tags-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .tags-lbl{font-size:12px;font-weight:700;color:var(--muted)}
+  .tag{font-size:12.5px;padding:5px 11px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:var(--muted);font-weight:600}
+  .tag.active{font-weight:700}
+  .sel{padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;font-size:13.5px;background:#fff}
+  .del-defect{margin-top:10px;display:flex;align-items:center;gap:5px;font-size:12.5px;color:#dc2626;background:none;border:none;padding:0;font-weight:600}
+  .add-defect{display:flex;align-items:center;gap:6px;margin-top:14px;padding:9px 14px;background:#eff6ff;color:var(--blue);border:1.5px dashed #bfdbfe;border-radius:9px;font-weight:700;font-size:13.5px;width:100%;justify-content:center}
+  .add-zone{display:flex;align-items:center;gap:7px;justify-content:center;width:100%;padding:13px;background:#fff;color:var(--blue);border:2px dashed var(--blue);border-radius:12px;font-weight:700;font-size:15px;margin-bottom:16px}
+
+  .action-bar{position:fixed;bottom:0;inset-inline:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom));z-index:20}
+  .action-bar-inner{max-width:920px;margin:0 auto;display:flex;gap:10px;width:100%}
+  .btn-save{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:#0f172a;color:#fff;border:none;border-radius:11px;padding:13px;font-weight:700;font-size:15px}
+  .btn-print{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;background:var(--blue);color:#fff;border:none;border-radius:11px;padding:13px;font-weight:700;font-size:15px}
+
+  /* templates */
+  .tpl-card{background:#fff;border-radius:14px;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05);overflow:hidden}
+  .tpl-preview{padding:16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+  .tpl-logo{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden}
+  .tpl-logo img{width:100%;height:100%;object-fit:contain}
+  .tpl-company{font-family:var(--font-head);font-weight:800;font-size:16px}
+  .tpl-sub{font-size:11px;color:var(--muted)}
+  .tpl-meta{padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+  .tpl-name{font-weight:700;font-size:13.5px}
+  .tpl-swatches{display:flex;gap:5px}
+  .tpl-sw{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,.1)}
+  .tpl-actions{display:flex;gap:6px;padding:0 16px 16px}
+  .color-field{display:flex;align-items:center;gap:10px}
+  .color-field input[type=color]{width:46px;height:40px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
+  .logo-upload{display:flex;align-items:center;gap:12px}
+  .logo-prev{width:64px;height:64px;border-radius:12px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;overflow:hidden;flex-shrink:0}
+  .logo-prev img{width:100%;height:100%;object-fit:contain}
+
+  /* print doc */
+  .print-toolbar{display:flex;justify-content:space-between;margin-bottom:16px;gap:10px}
+  .print-doc{background:#fff;max-width:760px;margin:0 auto;padding:36px;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.08)}
+  .doc-header{display:flex;padding-bottom:14px;border-bottom:3px solid var(--blue)}
+  .doc-logo{display:flex;align-items:center;gap:12px}
+  .doc-tri{width:74px;height:74px;border-radius:14px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0}
+  .doc-tri img{width:100%;height:100%;object-fit:contain}
+  .doc-tri svg{width:60%;height:60%}
+  .doc-company{font-family:var(--font-head);font-weight:800;font-size:20px}
+  .doc-company-sub{font-size:11.5px;color:#475569}
+  .doc-title-box{border:2px solid var(--blue);border-radius:10px;padding:16px;margin:20px 0;text-align:center}
+  .doc-title{font-family:var(--font-head);font-size:22px;font-weight:800;color:var(--blue);margin:0}
+  .meta-table{border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:12px}
+  .meta-row{display:flex;border-bottom:1px solid #eef2f7}
+  .meta-row:last-child{border-bottom:none}
+  .meta-cell{flex:1;padding:9px 14px;font-size:13.5px}
+  .meta-key{font-weight:700;color:var(--blue)}
+  .doc-note{font-size:13px;color:#334155;padding:8px 4px;line-height:1.6}
+  .doc-zone{margin-top:20px;break-inside:avoid}
+  .doc-zone-title{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--blue);border-bottom:2px solid #f1f5f9;padding-bottom:6px;margin-bottom:6px}
+  .doc-defect{display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed #e8edf3;break-inside:avoid;align-items:flex-start}
+  .doc-img{width:200px;height:160px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--line)}
+  .doc-img-empty{width:200px;height:30px;flex-shrink:0}
+  .doc-defect-text{flex:1;padding-top:4px}
+  .doc-defect-desc{font-size:14.5px;line-height:1.6;margin:0;color:#1e293b}
+  .doc-defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);margin-inline-end:8px}
+  .doc-tags{display:flex;gap:8px;margin-top:10px}
+  .doc-tag{font-size:12px;font-weight:700;padding:4px 12px;border-radius:8px;border:1.5px solid}
+  .doc-summary{margin-top:28px;border:2px solid var(--blue);border-radius:10px;padding:20px;break-inside:avoid}
+  .doc-summary-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--blue);text-align:center;margin:0 0 12px}
+  .doc-signwrap{margin-top:30px;text-align:left;break-inside:avoid}
+  .doc-sign{display:inline-block;text-align:left}
+  .doc-sign-name{font-family:var(--font-head);font-weight:700;font-size:15px}
+  .doc-sign-line{font-size:12.5px;color:#475569}
+  .doc-footer{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:20px;padding-top:14px;border-top:2px solid var(--blue)}
+
+  @media print{
+    html,body{height:auto!important}
+    body{background:#fff}
+    header,.action-bar,.print-toolbar,.no-print{display:none!important}
+    .container{padding:0;max-width:100%}
+    .print-doc{box-shadow:none;margin:0;max-width:100%;padding:0;border-radius:0}
+    /* מניעת עמוד ריק בסוף: ביטול מרווחים תחתונים בסוף המסמך */
+    .doc-signwrap{margin-top:22px}
+    .doc-footer{margin-top:12px;padding-top:10px;margin-bottom:0}
+    .print-doc>*:last-child{margin-bottom:0!important}
+    .container>*:last-child,.container{margin-bottom:0!important}
+    @page{
+      margin:16mm 14mm 16mm;
+      @bottom-center{ content:"עמוד " counter(page) " / " counter(pages); font-family:'Heebo',sans-serif; font-size:10px; color:#94a3b8; }
+    }
+  }
+  @media(max-width:560px){
+    .img-col{width:108px}
+    .doc-img{width:130px;height:104px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="h-inner">
+    <button class="brand" onclick="go('home')">
+      <span class="brand-name">REPORTpro - <span class="brand-sub-inline">פיקוח עליון ובקרה הנדסית</span></span>
+    </button>
+    <div class="h-right">
+      <span class="flash" id="flash">✓ נשמר</span>
+      <button class="link-btn" id="verBtn" onclick="showChangelog()" title="היסטוריית גרסאות">v1.21.0</button>
+      <button class="link-btn hidden" id="homeBtn" onclick="go('home')">בית</button>
+    </div>
+  </div>
+</header>
+
+<div class="container" id="app"></div>
+
+<input type="file" id="fileInput" accept="image/*" hidden="">
+<input type="file" id="camInput" accept="image/*" capture="environment" hidden="">
+<input type="file" id="importInput" accept="application/json" hidden="">
+<input type="file" id="logoInput" accept="image/*" hidden="">
+<input type="file" id="sigInput" accept="image/*" hidden="">
+
+<script>
+/* ============================================================
+   REPORTpro — מערכת דוחות פיקוח עליון ובקרה הנדסית (עצמאית)
+   תכונות: תבניות גרפיות · תיקיות/פרויקטים · ארכיון · תמונות · PDF
+   ============================================================ */
+
+/* ===== מספר גרסה — מתקדם בכל עדכון ===== */
+const APP_VERSION="1.21.0";
+const CHANGELOG=[
+  {v:"1.21.0",d:"עמידות לפתיחה מקובץ מקומי: האפליקציה נטענת גם כשהאחסון חסום (מצב ללא שמירה אוטומטית עם גיבוי/שחזור)"},
+  {v:"1.20.1",d:"מניעת עמוד אחרון ריק ב-PDF — המסמך מסתיים אחרי החתימה"},
+  {v:"1.20.0",d:"בלוק החתימה ופרטי המהנדס ממוקמים בפינה השמאלית-תחתונה של הדוח"},
+  {v:"1.19.2",d:"תיקון ניסוח: 'הצעות תפוצה' שונה ל'תפוצה'"},
+  {v:"1.19.1",d:"סימון דוח נבחר בארכיון בולט יותר: לחיצה על כרטיס לסימון, רקע מודגש, מסגרת וסמן פינתי"},
+  {v:"1.19.0",d:"מיקום לוגו בתבנית (UI), כותרת משנה רב-שורתית, וסימון ויזואלי של הדוח הנבחר בארכיון"},
+  {v:"1.18.0",d:"שמירת דוח בודד כקובץ HTML עצמאי במיקום לבחירה במחשב (כולל תמונות)"},
+  {v:"1.17.0",d:"כפתור הורדת קובץ ה-HTML של האפליקציה עם בחירת מיקום שמירה במחשב"},
+  {v:"1.16.1",d:"תיקון: הקלדת שם חברה/כותרת בעורך התבנית ללא קפיצה מחוץ לשדה"},
+  {v:"1.16.0",d:"הדבקת לוגו מהלוח (Ctrl/Cmd+V) בעורך התבנית, בנוסף להעלאה"},
+  {v:"1.15.0",d:"התאמות מובייל לאנדרואיד ואייפון: מצב אפליקציה במסך הבית, התאמת אזור בטוח לאייפון"},
+  {v:"1.14.0",d:"הדבקה ללא בקשת הרשאה (Ctrl/Cmd+V ישיר) + גרירה ושחרור של תמונה לליקוי"},
+  {v:"1.13.0",d:"הדבקת תמונה מהלוח (Paste) לליקוי — נוח לגזירת תמונות במחשב"},
+  {v:"1.12.0",d:"הסרת האייקון האדום מהכותרת; שם האפליקציה מוצג עם מקף - REPORTpro - פיקוח עליון ובקרה הנדסית"},
+  {v:"1.11.0",d:"שם האפליקציה שונה ל-REPORTpro"},
+  {v:"1.10.0",d:"בקרות גודל בעורך התבנית: לוגו, חתימה וגודל תמונות בדוח (עם תצוגה מקדימה חיה)"},
+  {v:"1.9.0",d:"לוגו גדול יותר בכותרת הדוח; בלוק חתימה ופרטי המהנדס מיושר לצד שמאל למטה"},
+  {v:"1.8.0",d:"שדות מהדורה ותאריך עדכון בפרטי הדוח; תמונות מוצגות במלואן ללא חיתוך + מתג מילוי מסגרת"},
+  {v:"1.7.0",d:"כפתור שיתוף מובנה — שיתוף האפליקציה ושיתוף גיבוי נתונים דרך תפריט השיתוף של המכשיר"},
+  {v:"1.6.0",d:"מספור עמודים אוטומטי ב-PDF + חותם תאריך/שעת הפקה בתחתית הדוח"},
+  {v:"1.5.0",d:"חתימה/לוגו סרוק ליד שם המהנדס, אופטימיזציות לאייפון (דחיסת HEIC), גיבוי אוטומטי ותזכורת"},
+  {v:"1.4.0",d:"פרטי לקוח/נמען מלאים בתבנית, קביעת תבנית ברירת מחדל, תצוגת מספר גרסה"},
+  {v:"1.3.0",d:"תבניות גרפיות (לוגו וצבעים) + תיקיות/פרויקטים"},
+  {v:"1.2.0",d:"כלי עצמאי בקובץ אחד עם שמירה מקומית, תמונות ו-PDF"},
+];
+
+const I={
+  tri:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  triBig:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>',
+  plus:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg>',
+  trash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  cam:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>',
+  img:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>',
+  imgBig:'<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>',
+  printer:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>',
+  save:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>',
+  up:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m18 15-6-6-6 6"/></svg>',
+  down:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>',
+  copy:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+  x:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  arrow:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>',
+  file:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  cal:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  pin:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+  download:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+  upload:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
+  folder:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>',
+  palette:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2Z"/></svg>',
+  edit:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>',
+  star:'<svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  starOff:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+  user:'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+  share:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>',
+  paste:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>',
+};
+
+const SEVERITIES=[
+  {id:"high",label:"גבוהה",color:"#dc2626",bg:"#fef2f2",border:"#fecaca"},
+  {id:"medium",label:"בינונית",color:"#d97706",bg:"#fffbeb",border:"#fde68a"},
+  {id:"low",label:"נמוכה",color:"#16a34a",bg:"#f0fdf4",border:"#bbf7d0"},
+];
+const CATEGORIES=["מפגע","חוסר התאמה לתוכנית","השלמה נדרשת","תמרור","סימון כביש","בטיחות","אחר"];
+const FOLDER_COLORS=["#1d4ed8","#16a34a","#d97706","#9333ea","#dc2626","#0891b2","#db2777","#65a30d"];
+const sevOf=id=>SEVERITIES.find(s=>s.id===id);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const escMulti=s=>esc(s).replace(/\r?\n/g,"<br>");
+function nowStamp(){
+  const d=new Date(),p=n=>String(n).padStart(2,"0");
+  return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+const defaultTemplate=()=>({
+  id:"tpl_default",name:"כרמין הנדסה (ברירת מחדל)",isDefault:true,
+  company:'כרמין הנדסה בע"מ',
+  companySub:"פיקוח עליון ובקרה הנדסית · ייעוץ תנועה ובטיחות",
+  primaryColor:"#1d4ed8",accentColor:"#b91c1c",logo:"",
+  clientName:"",clientContact:"",clientAddress:"",clientPhone:"",clientEmail:"",
+  engineerName:"מרקו קנזיביץ'י",engineerTitle:"מהנדס תנועה רשוי",engineerLicense:"מ.ר 49292986",signature:"",
+  logoSize:74,signatureSize:70,imageSize:220,logoPosition:"right",
+});
+const blankTemplate=()=>({
+  id:uid(),name:"תבנית חדשה",isDefault:false,company:"שם החברה / הארגון",companySub:"כותרת משנה",
+  primaryColor:"#0f766e",accentColor:"#0f766e",logo:"",
+  clientName:"",clientContact:"",clientAddress:"",clientPhone:"",clientEmail:"",
+  engineerName:"",engineerTitle:"",engineerLicense:"",signature:"",
+  logoSize:74,signatureSize:70,imageSize:220,logoPosition:"right",
+});
+function getDefaultTemplate(){return state.templates.find(t=>t.isDefault)||state.templates[0]||defaultTemplate();}
+const blankDefect=()=>({id:uid(),image:"",description:"",severity:"",category:""});
+const blankZone=()=>({id:uid(),title:"",defects:[blankDefect()]});
+function blankReport(){
+  const tpl=getDefaultTemplate();
+  return {
+    id:uid(),createdAt:Date.now(),updatedAt:Date.now(),
+    folderId:(state.activeFolderId&&state.activeFolderId!=="__none")?state.activeFolderId:null,
+    templateId:tpl.id,
+    title:"פיקוח עליון קו כחול - מקטע 3 - לילה",
+    date:new Date().toISOString().slice(0,10),
+    location:"",stage:"שלב מס' 1",editor:tpl.engineerName||"",
+    distributionSuggestions:"",
+    generalNotes:"",planNumber:"KAR-TR-BL-TEMPRH03-DD-301-",
+    revision:"01",revisionDate:new Date().toISOString().slice(0,10),
+    imageFit:"contain",
+    zones:[blankZone()],
+    summary:"יש לתקן כלל הליקויים עד ביצוע הלילה הבא.",
+    engineerName:tpl.engineerName||"",engineerTitle:tpl.engineerTitle||"",
+    engineerLicense:tpl.engineerLicense||"",
+  };
+}
+
+// ---------- IndexedDB ----------
+const memStore={reports:{},folders:{},templates:{}};
+const DB={ _db:null, broken:false, _opened:false,
+  open(){return new Promise((res)=>{
+    if(this._opened)return res(this._db);
+    let settled=false;
+    const done=(db,broken)=>{if(settled)return;settled=true;this._opened=true;this._db=db;this.broken=!!broken;clearTimeout(to);res(db);};
+    const to=setTimeout(()=>done(null,true),2500); // אם האחסון לא נפתח תוך 2.5 שניות — עוברים לזיכרון
+    try{
+      if(typeof indexedDB==="undefined")return done(null,true);
+      const r=indexedDB.open("carmin_reports",2);
+      r.onupgradeneeded=e=>{const db=e.target.result;
+        if(!db.objectStoreNames.contains("reports"))db.createObjectStore("reports",{keyPath:"id"});
+        if(!db.objectStoreNames.contains("folders"))db.createObjectStore("folders",{keyPath:"id"});
+        if(!db.objectStoreNames.contains("templates"))db.createObjectStore("templates",{keyPath:"id"});
+      };
+      r.onsuccess=e=>done(e.target.result,false);
+      r.onerror=()=>done(null,true);
+      r.onblocked=()=>done(null,true);
+    }catch(e){done(null,true);}
+  });},
+  async all(store){const db=await this.open();
+    if(!db||this.broken)return Object.values(memStore[store]).map(x=>JSON.parse(JSON.stringify(x)));
+    try{return await new Promise((res,rej)=>{const rq=db.transaction(store,"readonly").objectStore(store).getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=rej;});}
+    catch(e){this.broken=true;return Object.values(memStore[store]).map(x=>JSON.parse(JSON.stringify(x)));}
+  },
+  async put(store,obj){memStore[store][obj.id]=JSON.parse(JSON.stringify(obj));const db=await this.open();
+    if(!db||this.broken)return;
+    try{return await new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");tx.objectStore(store).put(obj);tx.oncomplete=res;tx.onerror=rej;});}
+    catch(e){this.broken=true;}
+  },
+  async del(store,id){delete memStore[store][id];const db=await this.open();
+    if(!db||this.broken)return;
+    try{return await new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");tx.objectStore(store).delete(id);tx.oncomplete=res;tx.onerror=rej;});}
+    catch(e){this.broken=true;}
+  },
+};
+
+function compressImage(file,maxDim=1400,quality=0.72){
+  return new Promise((res,rej)=>{
+    const reader=new FileReader();
+    reader.onerror=()=>rej(new Error("read"));
+    reader.onload=e=>{
+      const img=new Image();
+      img.onerror=()=>rej(new Error("decode"));
+      img.onload=()=>{
+        try{
+          let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
+          if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+          else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+          const c=document.createElement("canvas");c.width=w;c.height=h;
+          const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+          ctx.drawImage(img,0,0,w,h);
+          res(c.toDataURL("image/jpeg",quality));
+        }catch(err){rej(err);}
+      };
+      img.src=e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ---------- STATE ----------
+let state={view:"home",reports:[],folders:[],templates:[],current:null,currentTpl:null,activeFolderId:null,selectedReportId:null};
+let pendingImg=null;
+
+async function init(){
+  try{
+    state.reports=await DB.all("reports");
+    state.folders=await DB.all("folders");
+    state.templates=await DB.all("templates");
+  }catch(e){ DB.broken=true; }
+  if(state.templates.length===0){const d=defaultTemplate();await DB.put("templates",d);state.templates=[d];}
+  state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
+  render();
+  if(DB.broken)showNoStoreBanner();
+}
+let noStoreBannerShown=false;
+function showNoStoreBanner(){
+  if(noStoreBannerShown)return; noStoreBannerShown=true;
+  const b=document.createElement("div");
+  b.style.cssText="position:fixed;top:64px;inset-inline:10px;max-width:900px;margin:0 auto;background:#fffbeb;border:1.5px solid #fde68a;color:#92400e;padding:11px 14px;border-radius:12px;font-family:var(--font-body);font-size:13px;font-weight:600;z-index:40;box-shadow:0 4px 14px rgba(0,0,0,.12);display:flex;gap:10px;align-items:flex-start;line-height:1.5";
+  b.innerHTML='<span>⚠️</span><span>מצב ללא שמירה אוטומטית — נפתח מקובץ מקומי שבו הדפדפן חוסם שמירה. ניתן לעבוד רגיל, אך כדי לא לאבד נתונים השתמשו ב<b>"גיבוי"</b> בסיום, ו<b>"שחזור"</b> בפתיחה. לשמירה יציבה: פתחו דרך קישור/דפדפן.</span><button style="margin-inline-start:auto;background:none;border:none;color:#92400e;font-weight:800;font-size:16px;cursor:pointer">✕</button>';
+  b.querySelector("button").onclick=()=>b.remove();
+  document.body.appendChild(b);
+}
+function go(view){state.view=view;render();window.scrollTo(0,0);}
+function flash(){const f=document.getElementById("flash");f.classList.add("show");setTimeout(()=>f.classList.remove("show"),1600);}
+function tplOf(id){return state.templates.find(t=>t.id===id)||state.templates[0]||defaultTemplate();}
+function folderOf(id){return state.folders.find(f=>f.id===id);}
+
+// ---------- RENDER ROUTER ----------
+function render(){
+  document.getElementById("homeBtn").classList.toggle("hidden",state.view==="home");
+  const app=document.getElementById("app");
+  if(state.view==="home"){app.innerHTML=homeHTML();}
+  else if(state.view==="edit"){app.innerHTML=editHTML();bindEdit();}
+  else if(state.view==="print"){app.innerHTML=printHTML();}
+  else if(state.view==="templates"){app.innerHTML=templatesHTML();}
+  else if(state.view==="templateEdit"){app.innerHTML=templateEditHTML();bindTemplateEdit();}
+}
+
+// ============================================================
+//  HOME — תיקיות + ארכיון
+// ============================================================
+function homeHTML(){
+  const fid=state.activeFolderId;
+  const list=state.reports.filter(r=>{
+    if(!fid)return true;
+    if(fid==="__none")return !r.folderId;
+    return r.folderId===fid;
+  });
+  const countFor=f=>state.reports.filter(r=>r.folderId===f.id).length;
+  const noneCount=state.reports.filter(r=>!r.folderId).length;
+
+  const chips=`
+    <div class="chips">
+      <button class="chip ${!fid?'active':''}" onclick="selFolder(null)">כל הדוחות <span class="cnt">(${state.reports.length})</span></button>
+      ${state.folders.map(f=>`<button class="chip ${fid===f.id?'active':''}" onclick="selFolder('${f.id}')"><span class="dot" style="background:${f.color}"></span>${esc(f.name)} <span class="cnt">(${countFor(f)})</span></button>`).join("")}
+      <button class="chip ${fid==='__none'?'active':''}" onclick="selFolder('__none')">ללא תיקייה <span class="cnt">(${noneCount})</span></button>
+      <button class="chip chip-add" onclick="addFolder()">${I.plus} תיקייה</button>
+    </div>`;
+
+  const activeFolder=fid&&fid!=="__none"?folderOf(fid):null;
+  const folderBar=activeFolder?`
+    <div class="toolbar">
+      <button class="btn-ghost-sm" onclick="renameFolder('${activeFolder.id}')">${I.edit} שנה שם</button>
+      <button class="btn-ghost-sm" onclick="recolorFolder('${activeFolder.id}')">${I.palette} צבע</button>
+      <button class="btn-ghost-sm" style="color:#dc2626" onclick="delFolder('${activeFolder.id}')">${I.trash} מחק תיקייה</button>
+    </div>`:`
+    <div class="toolbar">
+      <button class="btn-ghost-sm" onclick="go('templates')">${I.palette} תבניות גרפיות</button>
+      <button class="btn-ghost-sm" onclick="shareMenu()">${I.share} שתף</button>
+      <button class="btn-ghost-sm" onclick="downloadApp()">${I.download} הורד קובץ</button>
+      <button class="btn-ghost-sm" onclick="exportData()">${I.download} גיבוי</button>
+      <button class="btn-ghost-sm" onclick="document.getElementById('importInput').click()">${I.upload} שחזור</button>
+    </div>`;
+
+  const cards=list.map(r=>{
+    const dc=r.zones.reduce((s,z)=>s+z.defects.length,0);
+    const hc=r.zones.reduce((s,z)=>s+z.defects.filter(d=>d.severity==="high").length,0);
+    const tpl=tplOf(r.templateId);
+    const folderOpts=`<option value="">ללא תיקייה</option>`+state.folders.map(f=>`<option value="${f.id}" ${r.folderId===f.id?"selected":""}>${esc(f.name)}</option>`).join("");
+    const sel=(state.selectedReportId===r.id);
+    return `<div class="card${sel?' card-selected':''}" onclick="selectReport('${r.id}')">
+      ${sel?`<div class="card-check">${I.check}</div>`:""}
+      <div class="card-accent" style="background:${tpl.primaryColor}"></div><div class="card-body">
+      <div class="card-title">${esc(r.title)}</div>
+      <div class="card-meta"><span>${I.cal} ${esc(r.date)}</span>${r.location?`<span>${I.pin} ${esc(r.location)}</span>`:""}</div>
+      <div class="card-tpl"><span class="sw" style="background:${tpl.primaryColor}"></span>${esc(tpl.company)}</div>
+      <div class="pills"><span class="pill">${r.zones.length} אזורים</span><span class="pill">${dc} ליקויים</span>${hc>0?`<span class="pill high">${hc} חמורים</span>`:""}</div>
+      <div class="card-folder-row" onclick="event.stopPropagation()">${I.folder}<select class="mini-sel" onchange="moveToFolder('${r.id}',this.value)">${folderOpts}</select></div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <button class="card-edit" onclick="editReport('${r.id}')">עריכה</button>
+        <button class="icon-sq" onclick="printReport('${r.id}')">${I.printer}</button>
+        <button class="icon-sq" onclick="dupReport('${r.id}')">${I.copy}</button>
+        <button class="icon-sq danger" onclick="delReport('${r.id}')">${I.trash}</button>
+      </div></div></div>`;
+  }).join("");
+
+  return `
+  <div class="list-top">
+    <div><h1 class="page-title">${activeFolder?esc(activeFolder.name):"ארכיון דוחות"}</h1>
+    <p class="page-sub">${list.length} דוחות${activeFolder?" בתיקייה":""} · לחצו על כרטיס כדי לסמן את הדוח הפעיל</p></div>
+    <button class="btn-primary" onclick="newReport()">${I.plus} דוח חדש</button>
+  </div>
+  ${chips}
+  ${folderBar}
+  ${list.length===0
+    ? `<div class="empty">${I.file}<p>אין דוחות ${activeFolder?"בתיקייה זו":"עדיין"}</p><button class="btn-primary" style="margin-top:16px" onclick="newReport()">${I.plus} צור דוח</button></div>`
+    : `<div class="grid">${cards}</div>`}
+  <div style="text-align:center;color:#94a3b8;font-size:12px;margin-top:28px">REPORTpro · גרסה ${APP_VERSION}</div>`;
+}
+
+function selFolder(id){state.activeFolderId=id;render();}
+async function addFolder(){
+  const name=prompt("שם התיקייה (פרויקט / ארגון):");
+  if(!name)return;
+  const color=FOLDER_COLORS[state.folders.length%FOLDER_COLORS.length];
+  const f={id:uid(),name:name.trim(),color,createdAt:Date.now()};
+  await DB.put("folders",f);state.folders.push(f);state.activeFolderId=f.id;render();
+}
+async function renameFolder(id){const f=folderOf(id);const n=prompt("שם חדש:",f.name);if(!n)return;f.name=n.trim();await DB.put("folders",f);render();}
+async function recolorFolder(id){
+  const f=folderOf(id);
+  const idx=FOLDER_COLORS.indexOf(f.color);
+  f.color=FOLDER_COLORS[(idx+1)%FOLDER_COLORS.length];
+  await DB.put("folders",f);render();
+}
+async function delFolder(id){
+  if(!confirm("למחוק את התיקייה? הדוחות יישארו (יעברו ל'ללא תיקייה')."))return;
+  for(const r of state.reports.filter(r=>r.folderId===id)){r.folderId=null;await DB.put("reports",r);}
+  await DB.del("folders",id);
+  state.folders=state.folders.filter(f=>f.id!==id);state.activeFolderId=null;render();
+}
+async function moveToFolder(rid,fid){
+  const r=state.reports.find(x=>x.id===rid);if(!r)return;
+  r.folderId=fid||null;r.updatedAt=Date.now();await DB.put("reports",r);
+  // אם מסננים לפי תיקייה והדוח עזב — רענון
+  render();
+}
+
+function selectReport(id){state.selectedReportId=(state.selectedReportId===id?null:id);render();}
+function newReport(){state.current=blankReport();state.selectedReportId=state.current.id;go("edit");}
+function editReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));state.selectedReportId=id;go("edit");}
+function printReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));state.selectedReportId=id;go("print");}
+async function dupReport(id){const c=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));c.id=uid();c.createdAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
+async function delReport(id){if(!confirm("למחוק את הדוח?"))return;await DB.del("reports",id);state.reports=state.reports.filter(r=>r.id!==id);render();}
+
+async function persist(){
+  state.current.updatedAt=Date.now();
+  // ניקוי דגלים זמניים שלא צריכים להישמר
+  state.current.zones.forEach(z=>z.defects.forEach(d=>{delete d._busy;}));
+  await DB.put("reports",JSON.parse(JSON.stringify(state.current)));
+  const others=state.reports.filter(r=>r.id!==state.current.id);
+  state.reports=[JSON.parse(JSON.stringify(state.current)),...others].sort((a,b)=>b.updatedAt-a.updatedAt);
+  maybeRemindBackup();
+  flash();
+}
+// תזכורת גיבוי אחרי כמה שמירות (רשת ביטחון בשטח)
+function maybeRemindBackup(){
+  try{
+    let n=parseInt(sessionStorage.getItem("saveCount")||"0",10)+1;
+    sessionStorage.setItem("saveCount",String(n));
+    if(n%5===0){
+      setTimeout(()=>{ if(confirm("שמרת כמה דוחות. מומלץ לגבות עכשיו לקובץ כדי לא לאבד נתונים. לגבות?")) exportData(); },300);
+    }
+  }catch(e){}
+}
+
+// ============================================================
+//  EDIT
+// ============================================================
+function editHTML(){
+  const r=state.current;
+  const tplOpts=state.templates.map(t=>`<option value="${t.id}" ${r.templateId===t.id?"selected":""}>${esc(t.name)} — ${esc(t.company)}</option>`).join("");
+  const folderOpts=`<option value="">ללא תיקייה</option>`+state.folders.map(f=>`<option value="${f.id}" ${r.folderId===f.id?"selected":""}>${esc(f.name)}</option>`).join("");
+  return `
+  <div style="padding-bottom:20px">
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.palette}</span><h2 class="sec-title">תבנית ושיוך</h2></div>
+      <div class="field-grid">
+        <div><label class="lbl">${I.palette} תבנית גרפית</label><select class="input" data-f="templateId">${tplOpts}</select></div>
+        <div><label class="lbl">${I.folder} תיקייה / פרויקט</label><select class="input" data-f="folderId">${folderOpts}</select></div>
+        <div class="full"><label class="lbl">${I.img} תצוגת תמונות בדוח</label>
+          <select class="input" data-f="imageFit">
+            <option value="contain" ${(r.imageFit||"contain")==="contain"?"selected":""}>תמונה מלאה — ללא חיתוך (מומלץ)</option>
+            <option value="cover" ${r.imageFit==="cover"?"selected":""}>מילוי מסגרת — גודל אחיד (עלול לחתוך)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.file}</span><h2 class="sec-title">פרטי הדוח</h2></div>
+      <div class="field-grid">
+        <div class="full"><label class="lbl">כותרת הדוח</label><input class="input" data-f="title" value="${esc(r.title)}"></div>
+        <div><label class="lbl">${I.cal} תאריך</label><input class="input" type="date" data-f="date" value="${esc(r.date)}"></div>
+        <div><label class="lbl">שלב ביצוע</label><input class="input" data-f="stage" value="${esc(r.stage)}"></div>
+        <div class="full"><label class="lbl">${I.pin} מיקום</label><input class="input" data-f="location" value="${esc(r.location)}" placeholder="רחוב הרצל / שד' הקיבוצים / משה מזרחי"></div>
+        <div><label class="lbl">עורך</label><input class="input" data-f="editor" value="${esc(r.editor)}"></div>
+        <div><label class="lbl">תפוצה</label><input class="input" data-f="distributionSuggestions" value="${esc(r.distributionSuggestions)}"></div>
+        <div class="full"><label class="lbl">מספר תוכנית</label><input class="input" data-f="planNumber" value="${esc(r.planNumber)}"></div>
+        <div><label class="lbl">מהדורה</label><input class="input" data-f="revision" value="${esc(r.revision||"")}" placeholder="01"></div>
+        <div><label class="lbl">${I.cal} תאריך עדכון</label><input class="input" type="date" data-f="revisionDate" value="${esc(r.revisionDate||"")}"></div>
+        <div class="full"><label class="lbl">הערות כלליות</label><textarea class="input" data-f="generalNotes" placeholder="דוח פיקוח עליון…">${esc(r.generalNotes)}</textarea></div>
+      </div>
+    </div>
+
+    ${r.zones.map((z,zi)=>zoneHTML(z,zi,r.zones.length)).join("")}
+    <button class="add-zone" onclick="addZone()">${I.plus} הוסף אזור / צומת</button>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.check}</span><h2 class="sec-title">סיכום וחתימה</h2></div>
+      <div class="full" style="margin-bottom:14px"><label class="lbl">טקסט סיכום</label><textarea class="input" data-f="summary">${esc(r.summary)}</textarea></div>
+      <div class="field-grid">
+        <div><label class="lbl">שם המהנדס</label><input class="input" data-f="engineerName" value="${esc(r.engineerName)}"></div>
+        <div><label class="lbl">תפקיד</label><input class="input" data-f="engineerTitle" value="${esc(r.engineerTitle)}"></div>
+        <div><label class="lbl">מספר רישיון</label><input class="input" data-f="engineerLicense" value="${esc(r.engineerLicense)}"></div>
+      </div>
+    </div>
+  </div>
+  <div class="action-bar"><div class="action-bar-inner">
+    <button class="btn-save" onclick="saveReport()">${I.save} שמור</button>
+    <button class="btn-print" onclick="saveAndPrint()">${I.printer} ייצוא PDF</button>
+  </div></div>`;
+}
+
+function zoneHTML(z,zi,total){
+  return `<div class="zone" data-zid="${z.id}">
+    <div class="zone-head">
+      <span class="zone-num">${zi+1}</span>
+      <input class="zone-title-input" data-zfield="title" value="${esc(z.title)}" placeholder="כותרת אזור (לדוגמה: הרצל - סעדיה גאון)">
+      <div class="zone-acts">
+        <button class="icon-btn" ${zi===0?"disabled":""} onclick="moveZone(${zi},-1)">${I.up}</button>
+        <button class="icon-btn" ${zi===total-1?"disabled":""} onclick="moveZone(${zi},1)">${I.down}</button>
+        <button class="icon-btn danger" onclick="delZone('${z.id}')">${I.trash}</button>
+      </div>
+    </div>
+    <div class="zone-body">
+      ${z.defects.map((d,di)=>defectHTML(z.id,d,zi,di,z.defects.length)).join("")}
+      <button class="add-defect" onclick="addDefect('${z.id}')">${I.plus} הוסף ליקוי</button>
+    </div>
+  </div>`;
+}
+function defectHTML(zid,d,zi,di,total){
+  const sevTags=SEVERITIES.map(s=>{const a=d.severity===s.id;const st=a?`background:${s.bg};color:${s.color};border-color:${s.border}`:"";return `<button class="tag${a?' active':''}" style="${st}" onclick="toggleSev('${zid}','${d.id}','${s.id}')">${s.label}</button>`;}).join("");
+  const cats=`<option value="">— ללא —</option>`+CATEGORIES.map(c=>`<option value="${c}" ${d.category===c?"selected":""}>${c}</option>`).join("");
+  return `<div class="defect" data-did="${d.id}">
+    <div class="defect-num">${zi+1}.${di+1}</div>
+    <div class="img-col" ondragover="event.preventDefault();this.style.outline='2px dashed var(--blue)';this.style.outlineOffset='3px'" ondragleave="this.style.outline='none'" ondrop="this.style.outline='none';dropImg(event,'${zid}','${d.id}')">
+      ${d._busy?`<div class="img-ph">מעבד תמונה…</div>`:(d.image?`<div class="img-wrap"><img class="thumb" style="object-fit:${(state.current.imageFit||'contain')==='cover'?'cover':'contain'};background:#f1f5f9" src="${d.image}"><button class="img-remove" onclick="clearImg('${zid}','${d.id}')">${I.x}</button></div>`:`<div class="img-ph">${I.imgBig}</div>`)}
+      <div class="img-btns">
+        <button class="img-btn" ${d._busy?"disabled":""} onclick="pickImg('${zid}','${d.id}',true)">${I.cam} צלם</button>
+        <button class="img-btn" ${d._busy?"disabled":""} onclick="pickImg('${zid}','${d.id}',false)">${I.img} גלריה</button>
+        <button class="img-btn" ${d._busy?"disabled":""} onclick="pasteImg('${zid}','${d.id}')">${I.paste} הדבק</button>
+      </div>
+    </div>
+    <div class="defect-body">
+      <textarea class="input" data-dfield="description" placeholder="תיאור הליקוי…">${esc(d.description)}</textarea>
+      <div class="tags-row"><span class="tags-lbl">חומרה:</span>${sevTags}</div>
+      <div class="tags-row"><span class="tags-lbl">קטגוריה:</span><select class="sel" data-dfield="category">${cats}</select></div>
+      ${total>1?`<button class="del-defect" onclick="delDefect('${zid}','${d.id}')">${I.trash} מחק ליקוי</button>`:""}
+    </div>
+  </div>`;
+}
+function bindEdit(){
+  const r=state.current;
+  document.querySelectorAll('[data-f]').forEach(el=>{
+    const ev=el.tagName==="SELECT"?'change':'input';
+    el.addEventListener(ev,()=>{
+      r[el.dataset.f]=(el.dataset.f==="folderId"&&el.value==="")?null:el.value;
+      if(el.dataset.f==="imageFit")render();
+    });
+  });
+  document.querySelectorAll('.zone').forEach(zEl=>{
+    const z=r.zones.find(x=>x.id===zEl.dataset.zid);
+    zEl.querySelectorAll('[data-zfield]').forEach(el=>el.addEventListener('input',()=>{z[el.dataset.zfield]=el.value;}));
+    zEl.querySelectorAll('.defect').forEach(dEl=>{
+      const d=z.defects.find(x=>x.id===dEl.dataset.did);
+      dEl.querySelectorAll('[data-dfield]').forEach(el=>{const ev=el.tagName==="SELECT"?'change':'input';el.addEventListener(ev,()=>{d[el.dataset.dfield]=el.value;});});
+    });
+  });
+}
+function findZone(zid){return state.current.zones.find(z=>z.id===zid);}
+function addZone(){state.current.zones.push(blankZone());render();}
+function delZone(zid){state.current.zones=state.current.zones.filter(z=>z.id!==zid);if(!state.current.zones.length)state.current.zones.push(blankZone());render();}
+function moveZone(i,dir){const a=state.current.zones,j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();}
+function addDefect(zid){findZone(zid).defects.push(blankDefect());render();}
+function delDefect(zid,did){const z=findZone(zid);z.defects=z.defects.filter(d=>d.id!==did);render();}
+function toggleSev(zid,did,sid){const d=findZone(zid).defects.find(x=>x.id===did);d.severity=d.severity===sid?"":sid;render();}
+function clearImg(zid,did){findZone(zid).defects.find(x=>x.id===did).image="";render();}
+function pickImg(zid,did,cam){pendingImg={zid,did};document.getElementById(cam?"camInput":"fileInput").click();}
+async function handleFile(input){
+  const file=input.files&&input.files[0];input.value="";
+  if(!file||!pendingImg)return;
+  const d=findZone(pendingImg.zid).defects.find(x=>x.id===pendingImg.did);
+  const pend=pendingImg;pendingImg=null;
+  if(!d)return;
+  d._busy=true;render();
+  try{
+    const data=await compressImage(file);
+    const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
+    if(dd){dd.image=data;dd._busy=false;}
+  }catch(err){
+    const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
+    if(dd)dd._busy=false;
+    alert("לא ניתן היה לעבד את התמונה. נסה שוב או בחר תמונה אחרת.");
+  }
+  render();
+}
+document.getElementById("fileInput").addEventListener("change",e=>handleFile(e.target));
+document.getElementById("camInput").addEventListener("change",e=>handleFile(e.target));
+
+// ---------- הדבקת תמונה מהלוח ----------
+let pasteTarget=null;
+async function applyPaste(blob,zid,did){
+  const z=findZone(zid);const d=z&&z.defects.find(x=>x.id===did);
+  if(!d)return;
+  d._busy=true;render();
+  try{
+    const file=new File([blob],"paste.png",{type:blob.type||"image/png"});
+    const data=await compressImage(file);
+    const dd=findZone(zid).defects.find(x=>x.id===did);
+    if(dd){dd.image=data;dd._busy=false;}
+  }catch(err){
+    const dd=findZone(zid).defects.find(x=>x.id===did);if(dd)dd._busy=false;
+    alert("לא ניתן היה לעבד את התמונה שהודבקה.");
+  }
+  render();
+}
+function pasteImg(zid,did){
+  // ללא בקשת הרשאה: רק מסמנים יעד; ההדבקה מתבצעת ב-Ctrl/Cmd+V (לא דורש אישור דפדפן)
+  pasteTarget={zid,did};
+  showPasteHint();
+}
+let pasteHintEl=null;
+function showPasteHint(){
+  if(pasteHintEl)pasteHintEl.remove();
+  const isMac=/Mac|iPhone|iPad/.test(navigator.platform||navigator.userAgent);
+  pasteHintEl=document.createElement("div");
+  pasteHintEl.style.cssText="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:11px 18px;border-radius:12px;font-family:var(--font-body);font-size:14px;font-weight:700;z-index:50;box-shadow:0 6px 20px rgba(0,0,0,.3);display:flex;align-items:center;gap:8px";
+  pasteHintEl.innerHTML=(isMac?"⌘V":"Ctrl+V")+" כדי להדביק את התמונה";
+  document.body.appendChild(pasteHintEl);
+  clearTimeout(showPasteHint._t);
+  showPasteHint._t=setTimeout(()=>{if(pasteHintEl){pasteHintEl.remove();pasteHintEl=null;}},6000);
+}
+function hidePasteHint(){if(pasteHintEl){pasteHintEl.remove();pasteHintEl=null;}}
+function dropImg(e,zid,did){
+  e.preventDefault();
+  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f&&f.type&&f.type.startsWith("image/"))applyPaste(f,zid,did);
+}
+// מאזין גלובלי: Ctrl/Cmd+V מדביק לליקוי שנבחר
+document.addEventListener("paste",e=>{
+  // הדבקת לוגו בעורך התבנית
+  if(state.view==="templateEdit"&&logoPasteArmed){
+    const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+    for(const it of items){
+      if(it.type&&it.type.startsWith("image/")){
+        const blob=it.getAsFile();
+        if(blob){e.preventDefault();hidePasteHint();logoPasteArmed=false;applyLogoImage(blob);}
+        return;
+      }
+    }
+    return;
+  }
+  if(state.view!=="edit")return;
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(const it of items){
+    if(it.type&&it.type.startsWith("image/")){
+      const blob=it.getAsFile();
+      if(blob){
+        e.preventDefault();hidePasteHint();
+        const tgt=pasteTarget||lastDefectTarget();
+        if(!tgt){alert("בחר קודם ליקוי (לחץ על 'הדבק' בליקוי הרצוי) ואז הדבק.");return;}
+        pasteTarget=null;applyPaste(blob,tgt.zid,tgt.did);
+      }
+      return;
+    }
+  }
+});
+// אם לא נבחר יעד — ברירת מחדל לליקוי האחרון בדוח
+function lastDefectTarget(){
+  if(!state.current||!state.current.zones.length)return null;
+  const z=state.current.zones[state.current.zones.length-1];
+  if(!z.defects.length)return null;
+  return {zid:z.id,did:z.defects[z.defects.length-1].id};
+}
+
+async function saveReport(){await persist();}
+async function saveAndPrint(){await persist();go("print");}
+
+// ============================================================
+//  TEMPLATES — ניהול תבניות גרפיות
+// ============================================================
+function templatesHTML(){
+  const cards=state.templates.map(t=>`
+    <div class="tpl-card">
+      <div class="tpl-preview" style="border-bottom-color:${t.primaryColor}">
+        <div class="tpl-logo" style="background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">
+          ${t.logo?`<img src="${t.logo}">`:`<span style="color:#fff">${I.triBig}</span>`}
+        </div>
+        <div><div class="tpl-company" style="color:${t.accentColor}">${esc(t.company)}</div><div class="tpl-sub">${escMulti(t.companySub)}</div></div>
+      </div>
+      <div class="tpl-meta">
+        <span class="tpl-name">${esc(t.name)}${t.isDefault?` <span style="color:#d97706;font-size:11px">★ ברירת מחדל</span>`:""}</span>
+        <span class="tpl-swatches"><span class="tpl-sw" style="background:${t.primaryColor}"></span><span class="tpl-sw" style="background:${t.accentColor}"></span></span>
+      </div>
+      ${t.clientName?`<div style="padding:0 16px 8px;font-size:12px;color:#475569">${I.user} לקוח: ${esc(t.clientName)}</div>`:""}
+      <div class="tpl-actions">
+        <button class="card-edit" onclick="editTemplate('${t.id}')">ערוך תבנית</button>
+        <button class="icon-sq" onclick="setDefaultTemplate('${t.id}')" title="${t.isDefault?'ברירת מחדל':'קבע כברירת מחדל'}" style="color:${t.isDefault?'#d97706':'#94a3b8'}">${t.isDefault?I.star:I.starOff}</button>
+        <button class="icon-sq" onclick="dupTemplate('${t.id}')">${I.copy}</button>
+        ${state.templates.length>1?`<button class="icon-sq danger" onclick="delTemplate('${t.id}')">${I.trash}</button>`:""}
+      </div>
+    </div>`).join("");
+  return `
+  <div class="list-top">
+    <div><h1 class="page-title">תבניות גרפיות</h1><p class="page-sub">לוגו, צבעים ומיתוג לכל ארגון / חברה</p></div>
+    <button class="btn-primary" onclick="newTemplate()">${I.plus} תבנית חדשה</button>
+  </div>
+  <div class="toolbar"><button class="btn-ghost-sm" onclick="go('home')">${I.arrow} חזרה לארכיון</button></div>
+  <div class="grid">${cards}</div>`;
+}
+function newTemplate(){state.currentTpl=blankTemplate();go("templateEdit");}
+async function setDefaultTemplate(id){
+  for(const t of state.templates){const was=t.isDefault;t.isDefault=(t.id===id);if(was!==t.isDefault)await DB.put("templates",t);}
+  render();
+}
+function editTemplate(id){state.currentTpl=JSON.parse(JSON.stringify(state.templates.find(t=>t.id===id)));go("templateEdit");}
+async function dupTemplate(id){const c=JSON.parse(JSON.stringify(state.templates.find(t=>t.id===id)));c.id=uid();c.name+=" (עותק)";await DB.put("templates",c);state.templates.push(c);render();}
+async function delTemplate(id){
+  if(!confirm("למחוק את התבנית? דוחות שמשתמשים בה יעברו לתבנית ברירת המחדל."))return;
+  await DB.del("templates",id);
+  state.templates=state.templates.filter(t=>t.id!==id);
+  const fb=state.templates[0].id;
+  for(const r of state.reports.filter(r=>r.templateId===id)){r.templateId=fb;await DB.put("reports",r);}
+  render();
+}
+function templateEditHTML(){
+  const t=state.currentTpl;
+  return `
+  <div style="padding-bottom:20px">
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.palette}</span><h2 class="sec-title">עריכת תבנית גרפית</h2></div>
+      <div class="field-grid">
+        <div class="full"><label class="lbl">שם התבנית (פנימי)</label><input class="input" data-t="name" value="${esc(t.name)}" placeholder="למשל: עיריית תל אביב"></div>
+        <div class="full"><label class="lbl">שם החברה / הארגון (מוצג בכותרת)</label><input class="input" data-t="company" value="${esc(t.company)}"></div>
+        <div class="full"><label class="lbl">כותרת משנה (ניתן לכמה שורות)</label><textarea class="input" data-t="companySub" rows="2" placeholder="לדוגמה: פיקוח עליון ובקרה הנדסית&#10;ייעוץ תנועה ובטיחות">${esc(t.companySub)}</textarea></div>
+        <div><label class="lbl">צבע ראשי (כותרות ומסגרות)</label><div class="color-field"><input type="color" data-t="primaryColor" value="${t.primaryColor}"><input class="input" data-t="primaryColor" value="${t.primaryColor}" style="max-width:120px"></div></div>
+        <div><label class="lbl">צבע מותג (לוגו ושם)</label><div class="color-field"><input type="color" data-t="accentColor" value="${t.accentColor}"><input class="input" data-t="accentColor" value="${t.accentColor}" style="max-width:120px"></div></div>
+        <div class="full"><label class="lbl">לוגו (אופציונלי)</label>
+          <div class="logo-upload">
+            <div class="logo-prev" id="logoPrev" ondragover="event.preventDefault();this.style.outline='2px dashed var(--blue)'" ondragleave="this.style.outline='none'" ondrop="this.style.outline='none';dropLogo(event)">${t.logo?`<img src="${t.logo}">`:I.imgBig}</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn-ghost-sm" onclick="document.getElementById('logoInput').click()">${I.upload} העלה לוגו</button>
+              <button class="btn-ghost-sm" onclick="pasteLogo()">${I.paste} הדבק לוגו</button>
+              ${t.logo?`<button class="btn-ghost-sm" style="color:#dc2626" onclick="clearLogo()">${I.x} הסר</button>`:""}
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin:8px 0 0">אפשר להעלות קובץ, להדביק מהלוח (Ctrl/Cmd+V), או לגרור תמונה לתיבת התצוגה.</p>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.user}</span><h2 class="sec-title">פרטי לקוח / נמען</h2></div>
+      <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px">פרטי הלקוח/הזמין שיופיעו בראש הדוח (אופציונלי).</p>
+      <div class="field-grid">
+        <div class="full"><label class="lbl">שם הלקוח / הארגון המזמין</label><input class="input" data-t="clientName" value="${esc(t.clientName||"")}" placeholder="למשל: עיריית תל אביב-יפו"></div>
+        <div><label class="lbl">איש קשר</label><input class="input" data-t="clientContact" value="${esc(t.clientContact||"")}"></div>
+        <div><label class="lbl">טלפון</label><input class="input" data-t="clientPhone" value="${esc(t.clientPhone||"")}"></div>
+        <div class="full"><label class="lbl">כתובת</label><input class="input" data-t="clientAddress" value="${esc(t.clientAddress||"")}"></div>
+        <div class="full"><label class="lbl">דוא"ל</label><input class="input" data-t="clientEmail" value="${esc(t.clientEmail||"")}"></div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.check}</span><h2 class="sec-title">ברירות מחדל לחתימה</h2></div>
+      <p style="font-size:13px;color:var(--muted);margin:-6px 0 14px">ימולאו אוטומטית בדוח חדש שנוצר עם תבנית זו (ניתן לעריכה בכל דוח).</p>
+      <div class="field-grid">
+        <div><label class="lbl">שם המהנדס</label><input class="input" data-t="engineerName" value="${esc(t.engineerName)}"></div>
+        <div><label class="lbl">תפקיד</label><input class="input" data-t="engineerTitle" value="${esc(t.engineerTitle)}"></div>
+        <div><label class="lbl">מספר רישיון</label><input class="input" data-t="engineerLicense" value="${esc(t.engineerLicense)}"></div>
+        <div class="full"><label class="lbl">חתימה / חותמת סרוקה (אופציונלי)</label>
+          <div class="logo-upload">
+            <div class="logo-prev" style="width:130px;height:64px">${t.signature?`<img src="${t.signature}">`:I.edit}</div>
+            <div style="display:flex;flex-direction:column;gap:6px">
+              <button class="btn-ghost-sm" onclick="document.getElementById('sigInput').click()">${I.upload} העלה חתימה</button>
+              ${t.signature?`<button class="btn-ghost-sm" style="color:#dc2626" onclick="clearSignature()">${I.x} הסר</button>`:""}
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin:8px 0 0">צלם את החתימה/החותמת על נייר לבן ותעלה — תופיע ליד שם המהנדס בתחתית הדוח.</p>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.palette}</span><h2 class="sec-title">גדלים ואלמנטים גרפיים</h2></div>
+      <p style="font-size:13px;color:var(--muted);margin:-6px 0 16px">שליטה בגודל הלוגו, החתימה והתמונות עבור דוחות בתבנית זו. נשמר ברמת התבנית.</p>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div>
+          <label class="lbl">גודל לוגו בכותרת — <span id="logoSizeVal">${t.logoSize||74}</span> פיקסל</label>
+          <input type="range" min="40" max="140" step="2" data-t="logoSize" value="${t.logoSize||74}" style="width:100%" oninput="onLogoSize(this.value)">
+        </div>
+        <div>
+          <label class="lbl">מיקום הלוגו בכותרת</label>
+          <div style="display:flex;gap:8px">
+            ${[["right","ימין"],["center","מרכז"],["left","שמאל"]].map(([v,lbl])=>`<button class="btn-ghost-sm" style="flex:1;justify-content:center;${(t.logoPosition||'right')===v?'background:var(--blue);color:#fff;border-color:var(--blue)':''}" onclick="setLogoPos('${v}')">${lbl}</button>`).join("")}
+          </div>
+        </div>
+        <div>
+          <label class="lbl">גודל חתימה בתחתית — <span id="sigSizeVal">${t.signatureSize||70}</span> פיקסל</label>
+          <input type="range" min="40" max="160" step="2" data-t="signatureSize" value="${t.signatureSize||70}" style="width:100%" oninput="onSigSize(this.value)">
+        </div>
+        <div>
+          <label class="lbl">גודל תמונות בדוח — <span id="imgSizeVal">${t.imageSize||220}</span> פיקסל</label>
+          <input type="range" min="140" max="340" step="10" data-t="imageSize" value="${t.imageSize||220}" style="width:100%" oninput="document.getElementById('imgSizeVal').textContent=this.value">
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-head"><span class="sec-icon">${I.file}</span><h2 class="sec-title">תצוגה מקדימה</h2></div>
+      <div class="doc-header" id="prevHeader" style="--blue:${t.primaryColor}">
+        <div class="doc-logo" style="${logoLayoutStyle(t.logoPosition)}">
+          <span class="doc-tri" id="prevLogo" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${t.logo}">`:I.triBig}</span>
+          <div><div class="doc-company" id="prevCompany" style="color:${t.accentColor}">${esc(t.company)}</div><div class="doc-company-sub" id="prevSub">${escMulti(t.companySub)}</div></div>
+        </div>
+      </div>
+      ${t.signature?`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">חתימה:</div><img id="prevSig" src="${t.signature}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain"></div>`:""}
+    </div>
+  </div>
+  <div class="action-bar"><div class="action-bar-inner">
+    <button class="btn-save" onclick="go('templates')">ביטול</button>
+    <button class="btn-print" onclick="saveTemplate()">${I.save} שמור תבנית</button>
+  </div></div>`;
+}
+function onLogoSize(v){
+  state.currentTpl.logoSize=parseInt(v,10);
+  document.getElementById('logoSizeVal').textContent=v;
+  const el=document.getElementById('prevLogo');if(el){el.style.width=v+'px';el.style.height=v+'px';}
+}
+function onSigSize(v){
+  state.currentTpl.signatureSize=parseInt(v,10);
+  document.getElementById('sigSizeVal').textContent=v;
+  const el=document.getElementById('prevSig');if(el)el.style.maxHeight=v+'px';
+}
+function logoLayoutStyle(pos){
+  if(pos==="left")return "flex-direction:row-reverse";
+  if(pos==="center")return "flex-direction:column;align-items:center;text-align:center";
+  return ""; // right (ברירת מחדל)
+}
+function setLogoPos(pos){state.currentTpl.logoPosition=pos;render();bindTemplateEdit();}
+function bindTemplateEdit(){
+  const t=state.currentTpl;
+  document.querySelectorAll('[data-t]').forEach(el=>{
+    if(el.type==="range")return; // סליידרים מטופלים ב-oninput ישיר
+    el.addEventListener('input',()=>{
+      const key=el.dataset.t,val=el.value;
+      t[key]=val;
+      // סנכרון שדות מקושרים (בורר צבע + שדה טקסט עם אותו data-t) ללא רינדור
+      document.querySelectorAll('[data-t="'+key+'"]').forEach(other=>{if(other!==el)other.value=val;});
+      // עדכון התצוגה המקדימה ישירות — בלי לבנות מחדש את הטופס (לא מאבד פוקוס)
+      const company=document.getElementById('prevCompany');
+      const sub=document.getElementById('prevSub');
+      const header=document.getElementById('prevHeader');
+      const logo=document.getElementById('prevLogo');
+      if(key==="company"&&company)company.textContent=val;
+      if(key==="companySub"&&sub)sub.innerHTML=escMulti(val);
+      if(key==="primaryColor"&&header)header.style.setProperty('--blue',val);
+      if(key==="accentColor"){
+        if(company)company.style.color=val;
+        if(logo&&!t.logo)logo.style.background='linear-gradient(135deg,'+val+','+val+')';
+      }
+    });
+  });
+}
+async function saveTemplate(){await DB.put("templates",JSON.parse(JSON.stringify(state.currentTpl)));const others=state.templates.filter(t=>t.id!==state.currentTpl.id);state.templates=[...others,JSON.parse(JSON.stringify(state.currentTpl))];flash();go("templates");}
+function clearLogo(){state.currentTpl.logo="";render();bindTemplateEdit();}
+function clearSignature(){state.currentTpl.signature="";render();bindTemplateEdit();}
+async function applyLogoImage(file){
+  if(!file||!state.currentTpl||!file.type||!file.type.startsWith("image/"))return;
+  state.currentTpl.logo=await compressImage(file,400,0.85);render();bindTemplateEdit();
+}
+function dropLogo(e){
+  e.preventDefault();
+  const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+  if(f)applyLogoImage(f);
+}
+let logoPasteArmed=false;
+function pasteLogo(){
+  logoPasteArmed=true;
+  showPasteHint();
+}
+document.getElementById("logoInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];e.target.value="";await applyLogoImage(file);
+});
+document.getElementById("sigInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];e.target.value="";if(!file||!state.currentTpl)return;
+  state.currentTpl.signature=await compressImage(file,500,0.85);render();bindTemplateEdit();
+});
+
+// ============================================================
+//  PRINT — מותאם לתבנית
+// ============================================================
+function printHTML(){
+  const r=state.current;const t=tplOf(r.templateId);
+  const fit=(r.imageFit||"contain");
+  const isz=t.imageSize||220;
+  const imgStyle=fit==="cover"
+    ? `width:${isz}px;height:${Math.round(isz*0.78)}px;object-fit:cover`
+    : `width:${isz}px;height:auto;max-height:${Math.round(isz*1.3)}px;object-fit:contain;background:#f8fafc`;
+  const zones=r.zones.map((z,zi)=>`
+    <div class="doc-zone">
+      <h2 class="doc-zone-title">${zi+1}. ${esc(z.title)||"אזור"}</h2>
+      ${z.defects.map((d,di)=>{
+        const sev=sevOf(d.severity);
+        const tags=(sev||d.category)?`<div class="doc-tags">
+          ${sev?`<span class="doc-tag" style="color:${sev.color};border-color:${sev.border};background:${sev.bg}">חומרה: ${sev.label}</span>`:""}
+          ${d.category?`<span class="doc-tag" style="color:${t.primaryColor};border-color:${t.primaryColor}55;background:${t.primaryColor}11">קטגוריה: ${esc(d.category)}</span>`:""}
+        </div>`:"";
+        return `<div class="doc-defect">
+          ${d.image?`<img class="doc-img" style="${imgStyle}" src="${d.image}">`:`<div class="doc-img-empty"></div>`}
+          <div class="doc-defect-text"><p class="doc-defect-desc"><span class="doc-defect-num">${zi+1}.${di+1}</span>${esc(d.description)}</p>${tags}</div>
+        </div>`;
+      }).join("")}
+    </div>`).join("");
+
+  return `
+  <div class="print-toolbar no-print">
+    <button class="link-btn" onclick="go('edit')">${I.arrow} חזרה לעריכה</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-ghost-sm" onclick="saveReportFile()">${I.download} שמור דוח כקובץ</button>
+      <button class="btn-print" onclick="window.print()">${I.printer} הדפס / שמור כ-PDF</button>
+    </div>
+  </div>
+  <div class="print-doc" id="printDoc" style="--blue:${t.primaryColor}">
+    <div class="doc-header"><div class="doc-logo" style="${logoLayoutStyle(t.logoPosition)}">
+      <span class="doc-tri" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${t.logo}">`:I.triBig}</span>
+      <div><div class="doc-company" style="color:${t.accentColor}">${esc(t.company)}</div><div class="doc-company-sub">${escMulti(t.companySub)}</div></div></div></div>
+    <div class="doc-title-box"><h1 class="doc-title">${esc(r.title)}</h1></div>
+    ${(t.clientName||t.clientContact||t.clientAddress||t.clientPhone||t.clientEmail)?`
+    <div class="meta-table" style="margin-bottom:12px">
+      ${t.clientName?`<div class="meta-row"><div class="meta-cell"><span class="meta-key">לכבוד:</span> ${esc(t.clientName)}</div>${t.clientContact?`<div class="meta-cell"><span class="meta-key">איש קשר:</span> ${esc(t.clientContact)}</div>`:`<div class="meta-cell"></div>`}</div>`:""}
+      ${(t.clientPhone||t.clientEmail)?`<div class="meta-row">${t.clientPhone?`<div class="meta-cell"><span class="meta-key">טלפון:</span> ${esc(t.clientPhone)}</div>`:`<div class="meta-cell"></div>`}${t.clientEmail?`<div class="meta-cell"><span class="meta-key">דוא"ל:</span> ${esc(t.clientEmail)}</div>`:`<div class="meta-cell"></div>`}</div>`:""}
+      ${t.clientAddress?`<div class="meta-row"><div class="meta-cell" style="flex:1"><span class="meta-key">כתובת:</span> ${esc(t.clientAddress)}</div></div>`:""}
+    </div>`:""}
+    <div class="meta-table">
+      <div class="meta-row"><div class="meta-cell"><span class="meta-key">תאריך:</span> ${esc(r.date)||"—"}</div><div class="meta-cell"><span class="meta-key">מיקום:</span> ${esc(r.location)||"—"}</div></div>
+      <div class="meta-row"><div class="meta-cell"><span class="meta-key">שלב ביצוע:</span> ${esc(r.stage)||"—"}</div><div class="meta-cell"><span class="meta-key">עורך:</span> ${esc(r.editor)||"—"}</div></div>
+      ${(r.planNumber||r.revision)?`<div class="meta-row"><div class="meta-cell"><span class="meta-key">מספר תוכנית:</span> ${esc(r.planNumber)||"—"}</div><div class="meta-cell"><span class="meta-key">מהדורה:</span> ${esc(r.revision)||"—"}${r.revisionDate?` · עודכן ${esc(r.revisionDate)}`:""}</div></div>`:""}
+    </div>
+    ${r.distributionSuggestions?`<div class="doc-note"><b>תפוצה: </b>${esc(r.distributionSuggestions)}</div>`:""}
+    ${r.generalNotes?`<div class="doc-note"><b>הערות כלליות: </b>${esc(r.generalNotes)}</div>`:""}
+    ${zones}
+    <div class="doc-summary">
+      <h2 class="doc-summary-title">סיכום</h2>
+      <p style="margin:0">${esc(r.summary)}</p>
+    </div>
+    <div class="doc-signwrap">
+      <div class="doc-sign">
+        ${t.signature?`<img src="${t.signature}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain;margin-bottom:6px">`:""}
+        <div class="doc-sign-name">${esc(r.engineerName)}</div>
+        <div class="doc-sign-line">${esc(r.engineerTitle)}</div>
+        <div class="doc-sign-line">${esc(r.engineerLicense)}</div>
+        <div class="doc-sign-line" style="font-weight:700;margin-top:2px">${esc(t.company)}</div>
+      </div>
+    </div>
+    <div class="doc-footer">כל הזכויות שמורות | ${esc(t.company)}<br><span style="font-size:10.5px">הופק בתאריך ${nowStamp()} · גרסת מערכת ${APP_VERSION}</span></div>
+  </div>`;
+}
+
+// ---------- EXPORT / IMPORT (גיבוי מלא) ----------
+function exportData(){
+  const data={reports:state.reports,folders:state.folders,templates:state.templates};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="carmin-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);
+}
+
+// ---------- שיתוף ----------
+function shareMenu(){
+  const c=confirm("מה לשתף?\n\nאישור = שיתוף האפליקציה (כדי שעמיתים ישתמשו בה)\nביטול = שיתוף גיבוי נתונים (להעברת הדוחות שלך)");
+  if(c)shareApp();else shareBackup();
+}
+function buildAppFile(){
+  // יצירת עותק נקי של האפליקציה (ללא נתונים — הנתונים נשמרים בנפרד בכל מכשיר)
+  const html=document.documentElement.cloneNode(true);
+  const app=html.querySelector('#app');if(app)app.innerHTML='';
+  return "<!DOCTYPE html>\n"+html.outerHTML;
+}
+async function shareFile(blob,filename,title,text){
+  const file=new File([blob],filename,{type:blob.type});
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file],title,text});}catch(e){/* בוטל ע"י המשתמש */}
+    return true;
+  }
+  // נפילה חיננית: הורדה (למחשב/דפדפן ללא שיתוף)
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+  return false;
+}
+async function shareApp(){
+  const blob=new Blob([buildAppFile()],{type:"text/html"});
+  const ok=await shareFile(blob,"REPORTpro.html","REPORTpro · פיקוח עליון ובקרה הנדסית","REPORTpro — אפליקציית דוחות פיקוח. פתחו בדפדפן והוסיפו למסך הבית.");
+  if(!ok)alert("האפליקציה הורדה כקובץ. שלחו אותו לעמיתים — הם יפתחו אותו בדפדפן ויוסיפו למסך הבית.");
+}
+async function downloadApp(){
+  const blob=new Blob([buildAppFile()],{type:"text/html"});
+  // בחירת מיקום שמירה אמיתית (נתמך ב-Chrome/Edge במחשב)
+  if(window.showSaveFilePicker){
+    try{
+      const handle=await window.showSaveFilePicker({
+        suggestedName:"REPORTpro.html",
+        types:[{description:"קובץ HTML",accept:{"text/html":[".html"]}}]
+      });
+      const w=await handle.createWritable();
+      await w.write(blob);await w.close();
+      return;
+    }catch(e){ if(e&&e.name==="AbortError")return; /* אם נכשל — נופל להורדה רגילה */ }
+  }
+  // הורדה רגילה (תיקיית ההורדות, או חלון בחירה אם מוגדר בדפדפן)
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="REPORTpro.html";a.click();URL.revokeObjectURL(a.href);
+}
+// ---------- שמירת דוח בודד כקובץ HTML עצמאי ----------
+function safeName(s){return (s||"report").replace(/[\\/:*?"<>|\n\r\t]/g,"-").trim().slice(0,90);}
+function buildReportFile(r){
+  const docEl=document.getElementById("printDoc");
+  if(!docEl)return null;
+  const styleTag=document.querySelector("style").outerHTML;
+  const fontLink='<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;800&family=Rubik:wght@500;600;700;800&display=swap">';
+  return '<!DOCTYPE html>\n<html lang="he" dir="rtl"><head><meta charset="UTF-8">'
+    +'<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+    +'<title>'+esc(r.title)+'</title>'+fontLink+styleTag+'</head>'
+    +'<body style="background:#fff"><div style="max-width:760px;margin:0 auto;padding:20px">'
+    +docEl.outerHTML+'</div></body></html>';
+}
+async function saveReportFile(){
+  const r=state.current;
+  const html=buildReportFile(r);
+  if(!html){alert("לא ניתן להפיק את הקובץ. נסה שוב מתצוגת הדוח.");return;}
+  const blob=new Blob([html],{type:"text/html"});
+  const fname=safeName(r.title+" "+(r.date||""))+".html";
+  if(window.showSaveFilePicker){
+    try{
+      const h=await window.showSaveFilePicker({suggestedName:fname,types:[{description:"קובץ HTML",accept:{"text/html":[".html"]}}]});
+      const w=await h.createWritable();await w.write(blob);await w.close();return;
+    }catch(e){ if(e&&e.name==="AbortError")return; }
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=fname;a.click();URL.revokeObjectURL(a.href);
+}
+async function shareBackup(){
+  const data={reports:state.reports,folders:state.folders,templates:state.templates};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  const ok=await shareFile(blob,"carmin-backup-"+new Date().toISOString().slice(0,10)+".json","גיבוי דוחות פיקוח","קובץ גיבוי — שחזרו אותו דרך כפתור 'שחזור' באפליקציה.");
+  if(!ok)alert("הגיבוי הורד כקובץ. ניתן לשחזר אותו בכל מכשיר דרך כפתור 'שחזור'.");
+}
+document.getElementById("importInput").addEventListener("change",async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    const reports=Array.isArray(data)?data:(data.reports||[]);
+    const folders=data.folders||[];const templates=data.templates||[];
+    for(const r of reports)if(r&&r.id)await DB.put("reports",r);
+    for(const f of folders)if(f&&f.id)await DB.put("folders",f);
+    for(const t of templates)if(t&&t.id)await DB.put("templates",t);
+    state.reports=await DB.all("reports");state.folders=await DB.all("folders");state.templates=await DB.all("templates");
+    if(state.templates.length===0){const d=defaultTemplate();await DB.put("templates",d);state.templates=[d];}
+    state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
+    render();alert("השחזור הושלם: "+reports.length+" דוחות, "+folders.length+" תיקיות, "+templates.length+" תבניות.");
+  }catch(err){alert("הקובץ אינו תקין.");}
+  e.target.value="";
+});
+
+function showChangelog(){
+  const lines=CHANGELOG.map(c=>`v${c.v} — ${c.d}`).join("\n");
+  alert("REPORTpro · פיקוח עליון ובקרה הנדסית\nגרסה נוכחית: "+APP_VERSION+"\n\nהיסטוריית עדכונים:\n"+lines);
+}
+
+document.getElementById('verBtn').textContent="v"+APP_VERSION;
+init();
+</script>
+
+
+</body></html>
