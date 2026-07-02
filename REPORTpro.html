@@ -48,6 +48,10 @@
   .btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(29,78,216,.25)}
   .btn-ghost-sm{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:700;color:#334155}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .search-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .search-input{flex:1;min-width:180px;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;background:#fff;color:var(--ink);outline:none}
+  .search-input:focus{border-color:var(--blue)}
+  .search-sort{padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink);cursor:pointer}
 
   /* folder chips */
   .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:18px;-webkit-overflow-scrolling:touch}
@@ -118,9 +122,13 @@
   .icon-btn-sm:disabled{opacity:.3}
   .icon-btn-sm:active{background:#eff6ff}
   .img-col{width:130px;flex-shrink:0}
+  .img-grid{display:flex;flex-direction:column;gap:6px}
   .img-wrap{position:relative;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
-  .thumb{width:100%;height:110px;object-fit:cover;display:block}
+  .thumb{width:100%;height:110px;object-fit:cover;display:block;cursor:zoom-in}
   .img-remove{position:absolute;top:5px;inset-inline-end:5px;width:24px;height:24px;border-radius:50%;background:rgba(15,23,42,.7);color:#fff;border:none;display:flex;align-items:center;justify-content:center}
+  .img-order{position:absolute;bottom:5px;inset-inline-start:5px;display:flex;gap:3px}
+  .img-order button{width:24px;height:24px;border-radius:6px;background:rgba(15,23,42,.7);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .img-order button:disabled{opacity:.35;cursor:default}
   .img-ph{height:110px;border-radius:10px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#cbd5e1;font-size:12px}
   .img-btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
   .img-btn{flex:1 1 calc(50% - 3px)}
@@ -179,8 +187,9 @@
   .doc-zone{margin-top:20px;break-inside:avoid}
   .doc-zone-title{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--blue);border-bottom:2px solid #f1f5f9;padding-bottom:6px;margin-bottom:6px}
   .doc-defect{display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed #e8edf3;break-inside:avoid;align-items:flex-start}
-  .doc-img{width:200px;height:160px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--line)}
+  .doc-img{width:200px;height:160px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--line);cursor:zoom-in}
   .doc-img-empty{width:200px;height:30px;flex-shrink:0}
+  .doc-imgs{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
   .doc-defect-text{flex:1;padding-top:4px}
   .doc-defect-desc{font-size:14.5px;line-height:1.6;margin:0;color:#1e293b}
   .doc-defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);margin-inline-end:8px}
@@ -194,10 +203,17 @@
   .doc-sign-line{font-size:12.5px;color:#475569}
   .doc-footer{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:20px;padding-top:14px;border-top:2px solid var(--blue)}
 
+  #lightbox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px}
+  .lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.5);cursor:default}
+  .lb-close{position:fixed;top:14px;inset-inline-end:14px;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .lb-nav{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;border:none;font-size:30px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .lb-prev{left:16px}.lb-next{right:16px}
+  .lb-count{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:14px;font-weight:700;background:rgba(0,0,0,.5);padding:6px 14px;border-radius:20px}
+  @keyframes lbspin{to{transform:rotate(360deg)}}
   @media print{
     html,body{height:auto!important}
     body{background:#fff}
-    header,.action-bar,.print-toolbar,.no-print{display:none!important}
+    header,.action-bar,.print-toolbar,.no-print,#lightbox,#busyOverlay{display:none!important}
     .container{padding:0;max-width:100%}
     .print-doc{box-shadow:none;margin:0;max-width:100%;padding:0;border-radius:0}
     /* מניעת עמוד ריק בסוף: ביטול מרווחים תחתונים בסוף המסמך */
@@ -233,7 +249,7 @@
 <div class="container" id="app"></div>
 <div class="save-status" id="saveStatus"></div>
 
-<input type="file" id="fileInput" accept="image/*" hidden>
+<input type="file" id="fileInput" accept="image/*" multiple hidden>
 <input type="file" id="camInput" accept="image/*" capture="environment" hidden>
 <input type="file" id="importInput" accept="application/json" hidden>
 <input type="file" id="logoInput" accept="image/*" hidden>
@@ -246,8 +262,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.25.0";
+const APP_VERSION="1.26.0";
 const CHANGELOG=[
+  {v:"1.26.0",d:"תמונות מרובות לכל ליקוי (הוספה בצילום/גלריה/הדבקה, בחירת כמה קבצים יחד, סידור והסרה), הגדלת תמונה בלחיצה (לייטבוקס עם ניווט), חיפוש ומיון בארכיון, שכפול ליקוי, ייצוא PDF ישיר ללא חלון הדפסה, ושיפור עיבוד תמונות iPhone (כיוון EXIF ו-HEIC)"},
   {v:"1.25.0",d:"חיווי קבוע של מצב השמירה וזמן השמירה האחרונה בעת עריכת דוח"},
   {v:"1.24.0",d:"שמירה אוטומטית רציפה תוך כדי עבודה ובעת יציאה מהדוח — מונע אובדן עבודה"},
   {v:"1.23.0",d:"גרירת ליקויים לשינוי סדר (עכבר ומגע) בנוסף לחצים"},
@@ -343,8 +360,10 @@ const blankTemplate=()=>({
   logoSize:74,signatureSize:70,imageSize:220,logoPosition:"right",
 });
 function getDefaultTemplate(){return state.templates.find(t=>t.isDefault)||state.templates[0]||defaultTemplate();}
-const blankDefect=()=>({id:uid(),image:"",description:"",severity:"",category:""});
+const blankDefect=()=>({id:uid(),images:[],description:"",severity:"",category:""});
 const blankZone=()=>({id:uid(),title:"",defects:[blankDefect()]});
+// גישה בטוחה למערך התמונות של ליקוי + מיגרציה משדה image בודד (תאימות לאחור)
+const defectImages=d=>{if(!Array.isArray(d.images))d.images=d.image?[d.image]:[];return d.images;};
 function blankReport(){
   const tpl=getDefaultTemplate();
   return {
@@ -403,24 +422,30 @@ const DB={ _db:null, broken:false, _opened:false,
   },
 };
 
-function compressImage(file,maxDim=1400,quality=0.72){
-  return new Promise((res,rej)=>{
+function drawToJpeg(src,w,h,maxDim,quality){
+  if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
+  else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
+  ctx.drawImage(src,0,0,w,h);
+  return c.toDataURL("image/jpeg",quality);
+}
+async function compressImage(file,maxDim=1400,quality=0.72){
+  // עדיפות ל-createImageBitmap: מכבד כיוון EXIF (תמונות טלפון מסובבות), מפענח מגוון פורמטים ומהיר יותר
+  if(typeof createImageBitmap==="function"){
+    try{
+      const bmp=await createImageBitmap(file,{imageOrientation:"from-image"});
+      try{return drawToJpeg(bmp,bmp.width,bmp.height,maxDim,quality);}
+      finally{if(bmp.close)bmp.close();}
+    }catch(e){/* נפילה חיננית ל-FileReader+Image */}
+  }
+  return await new Promise((res,rej)=>{
     const reader=new FileReader();
     reader.onerror=()=>rej(new Error("read"));
     reader.onload=e=>{
       const img=new Image();
       img.onerror=()=>rej(new Error("decode"));
-      img.onload=()=>{
-        try{
-          let w=img.naturalWidth||img.width,h=img.naturalHeight||img.height;
-          if(w>h&&w>maxDim){h=Math.round(h*maxDim/w);w=maxDim;}
-          else if(h>maxDim){w=Math.round(w*maxDim/h);h=maxDim;}
-          const c=document.createElement("canvas");c.width=w;c.height=h;
-          const ctx=c.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
-          ctx.drawImage(img,0,0,w,h);
-          res(c.toDataURL("image/jpeg",quality));
-        }catch(err){rej(err);}
-      };
+      img.onload=()=>{try{res(drawToJpeg(img,img.naturalWidth||img.width,img.naturalHeight||img.height,maxDim,quality));}catch(err){rej(err);}};
       img.src=e.target.result;
     };
     reader.readAsDataURL(file);
@@ -428,9 +453,21 @@ function compressImage(file,maxDim=1400,quality=0.72){
 }
 
 // ---------- STATE ----------
-let state={view:"home",reports:[],folders:[],templates:[],current:null,currentTpl:null,activeFolderId:null,selectedReportId:null};
+let state={view:"home",reports:[],folders:[],templates:[],current:null,currentTpl:null,activeFolderId:null,selectedReportId:null,search:"",sort:"updated"};
 let pendingImg=null;
 
+// עמידות: ודא שכל דוח כולל אזורים וליקויים תקינים + מיגרציית תמונות (image בודד → images[])
+function normalizeReports(list){
+  (list||[]).forEach(r=>{
+    if(!r)return;
+    if(!Array.isArray(r.zones)||!r.zones.length)r.zones=[blankZone()];
+    r.zones.forEach(z=>{
+      if(!Array.isArray(z.defects)||!z.defects.length)z.defects=[blankDefect()];
+      z.defects.forEach(d=>{if(!Array.isArray(d.images))d.images=d.image?[d.image]:[];delete d.image;});
+    });
+  });
+  return list;
+}
 async function init(){
   try{
     state.reports=await DB.all("reports");
@@ -438,6 +475,7 @@ async function init(){
     state.templates=await DB.all("templates");
   }catch(e){ DB.broken=true; }
   if(state.templates.length===0){const d=defaultTemplate();await DB.put("templates",d);state.templates=[d];}
+  normalizeReports(state.reports);
   state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
   render();
   if(DB.broken)showNoStoreBanner();
@@ -504,13 +542,57 @@ function homeHTML(){
       <button class="btn-ghost-sm" onclick="document.getElementById('importInput').click()">${I.upload} שחזור</button>
     </div>`;
 
-  const cards=list.map(r=>{
-    const dc=r.zones.reduce((s,z)=>s+z.defects.length,0);
-    const hc=r.zones.reduce((s,z)=>s+z.defects.filter(d=>d.severity==="high").length,0);
-    const tpl=tplOf(r.templateId);
-    const folderOpts=`<option value="">ללא תיקייה</option>`+state.folders.map(f=>`<option value="${f.id}" ${r.folderId===f.id?"selected":""}>${esc(f.name)}</option>`).join("");
-    const sel=(state.selectedReportId===r.id);
-    return `<div class="card${sel?' card-selected':''}" onclick="selectReport('${r.id}')">
+  const searchRow=list.length>0?`
+    <div class="search-row">
+      <input class="search-input" id="archiveSearch" type="search" placeholder="חיפוש לפי כותרת, מיקום, מספר תוכנית…" value="${esc(state.search||"")}" oninput="onArchiveSearch(this.value)">
+      <select class="search-sort" onchange="onArchiveSort(this.value)">
+        ${[["updated","עודכן לאחרונה"],["date","תאריך הדוח"],["title","כותרת (א-ת)"],["defects","מספר ליקויים"]].map(([v,lbl])=>`<option value="${v}" ${(state.sort||"updated")===v?"selected":""}>${esc(lbl)}</option>`).join("")}
+      </select>
+    </div>`:"";
+
+  return `
+  <div class="list-top">
+    <div><h1 class="page-title">${activeFolder?esc(activeFolder.name):"ארכיון דוחות"}</h1>
+    <p class="page-sub">${list.length} דוחות${activeFolder?" בתיקייה":""} · לחצו על כרטיס כדי לסמן את הדוח הפעיל</p></div>
+    <button class="btn-primary" onclick="newReport()">${I.plus} דוח חדש</button>
+  </div>
+  ${chips}
+  ${folderBar}
+  ${searchRow}
+  <div id="archiveGrid">${archiveGridHTML(filteredSortedReports())}</div>
+  <div style="text-align:center;color:#94a3b8;font-size:12px;margin-top:28px">REPORTpro · גרסה ${APP_VERSION}</div>`;
+}
+function filteredSortedReports(){
+  const fid=state.activeFolderId;
+  let list=state.reports.filter(r=>{
+    if(!fid)return true;
+    if(fid==="__none")return !r.folderId;
+    return r.folderId===fid;
+  });
+  const q=(state.search||"").trim().toLowerCase();
+  if(q){
+    list=list.filter(r=>{
+      const tpl=tplOf(r.templateId);
+      const hay=[r.title,r.location,r.date,r.stage,r.planNumber,tpl&&tpl.company].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(q);
+    });
+  }
+  const sort=state.sort||"updated";
+  const defCount=r=>r.zones.reduce((s,z)=>s+z.defects.length,0);
+  return list.slice().sort((a,b)=>{
+    if(sort==="title")return (a.title||"").localeCompare(b.title||"","he");
+    if(sort==="date")return (b.date||"").localeCompare(a.date||"");
+    if(sort==="defects")return defCount(b)-defCount(a);
+    return (b.updatedAt||0)-(a.updatedAt||0);
+  });
+}
+function archiveCardHTML(r){
+  const dc=r.zones.reduce((s,z)=>s+z.defects.length,0);
+  const hc=r.zones.reduce((s,z)=>s+z.defects.filter(d=>d.severity==="high").length,0);
+  const tpl=tplOf(r.templateId);
+  const folderOpts=`<option value="">ללא תיקייה</option>`+state.folders.map(f=>`<option value="${f.id}" ${r.folderId===f.id?"selected":""}>${esc(f.name)}</option>`).join("");
+  const sel=(state.selectedReportId===r.id);
+  return `<div class="card${sel?' card-selected':''}" onclick="selectReport('${r.id}')">
       ${sel?`<div class="card-check">${I.check}</div>`:""}
       <div class="card-accent" style="background:${tpl.primaryColor}"></div><div class="card-body">
       <div class="card-title">${esc(r.title)}</div>
@@ -524,21 +606,20 @@ function homeHTML(){
         <button class="icon-sq" onclick="dupReport('${r.id}')">${I.copy}</button>
         <button class="icon-sq danger" onclick="delReport('${r.id}')">${I.trash}</button>
       </div></div></div>`;
-  }).join("");
-
-  return `
-  <div class="list-top">
-    <div><h1 class="page-title">${activeFolder?esc(activeFolder.name):"ארכיון דוחות"}</h1>
-    <p class="page-sub">${list.length} דוחות${activeFolder?" בתיקייה":""} · לחצו על כרטיס כדי לסמן את הדוח הפעיל</p></div>
-    <button class="btn-primary" onclick="newReport()">${I.plus} דוח חדש</button>
-  </div>
-  ${chips}
-  ${folderBar}
-  ${list.length===0
-    ? `<div class="empty">${I.file}<p>אין דוחות ${activeFolder?"בתיקייה זו":"עדיין"}</p><button class="btn-primary" style="margin-top:16px" onclick="newReport()">${I.plus} צור דוח</button></div>`
-    : `<div class="grid">${cards}</div>`}
-  <div style="text-align:center;color:#94a3b8;font-size:12px;margin-top:28px">REPORTpro · גרסה ${APP_VERSION}</div>`;
 }
+function archiveGridHTML(list){
+  const fid=state.activeFolderId;
+  const activeFolder=fid&&fid!=="__none"?folderOf(fid):null;
+  if(list.length===0){
+    if((state.search||"").trim())
+      return `<div class="empty">${I.file}<p>לא נמצאו דוחות התואמים ל"${esc(state.search)}"</p></div>`;
+    return `<div class="empty">${I.file}<p>אין דוחות ${activeFolder?"בתיקייה זו":"עדיין"}</p><button class="btn-primary" style="margin-top:16px" onclick="newReport()">${I.plus} צור דוח</button></div>`;
+  }
+  return `<div class="grid">${list.map(archiveCardHTML).join("")}</div>`;
+}
+function renderArchiveList(){const el=document.getElementById('archiveGrid');if(el)el.innerHTML=archiveGridHTML(filteredSortedReports());}
+function onArchiveSearch(v){state.search=v;renderArchiveList();}
+function onArchiveSort(v){state.sort=v;renderArchiveList();}
 
 function selFolder(id){state.activeFolderId=id;render();}
 async function addFolder(){
@@ -722,6 +803,10 @@ function zoneHTML(z,zi,total){
 function defectHTML(zid,d,zi,di,total){
   const sevTags=SEVERITIES.map(s=>{const a=d.severity===s.id;const st=a?`background:${s.bg};color:${s.color};border-color:${s.border}`:"";return `<button class="tag${a?' active':''}" style="${st}" onclick="toggleSev('${zid}','${d.id}','${s.id}')">${s.label}</button>`;}).join("");
   const cats=`<option value="">— ללא —</option>`+CATEGORIES.map(c=>`<option value="${c}" ${d.category===c?"selected":""}>${c}</option>`).join("");
+  const fit=(state.current.imageFit||'contain')==='cover'?'cover':'contain';
+  const imgs=defectImages(d);
+  const thumbs=imgs.map((src,ii)=>`<div class="img-wrap"><img class="thumb" style="object-fit:${fit};background:#f1f5f9" src="${esc(src)}"><button class="img-remove" title="הסר תמונה" onclick="clearImg('${zid}','${d.id}',${ii})">${I.x}</button>${imgs.length>1?`<div class="img-order"><button title="הקדם תמונה" ${ii===0?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},-1)">${I.up}</button><button title="דחה תמונה" ${ii===imgs.length-1?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},1)">${I.down}</button></div>`:""}</div>`).join("");
+  const gallery=`<div class="img-grid">${thumbs}${d._busy?`<div class="img-ph">מעבד תמונה…</div>`:(imgs.length?"":`<div class="img-ph">${I.imgBig}</div>`)}</div>`;
   return `<div class="defect" data-did="${d.id}" data-zid="${zid}">
     <div class="defect-num-col">
       <div class="defect-num">${zi+1}.${di+1}</div>
@@ -729,10 +814,11 @@ function defectHTML(zid,d,zi,di,total){
       <div class="defect-move">
         <button class="icon-btn-sm" ${di===0?"disabled":""} onclick="moveDefect('${zid}',${di},-1)" title="העבר מעלה">${I.up}</button>
         <button class="icon-btn-sm" ${di===total-1?"disabled":""} onclick="moveDefect('${zid}',${di},1)" title="העבר מטה">${I.down}</button>
+        <button class="icon-btn-sm" onclick="dupDefect('${zid}','${d.id}')" title="שכפל ליקוי">${I.copy}</button>
       </div>
     </div>
     <div class="img-col" ondragover="event.preventDefault();this.style.outline='2px dashed var(--blue)';this.style.outlineOffset='3px'" ondragleave="this.style.outline='none'" ondrop="this.style.outline='none';dropImg(event,'${zid}','${d.id}')">
-      ${d._busy?`<div class="img-ph">מעבד תמונה…</div>`:(d.image?`<div class="img-wrap"><img class="thumb" style="object-fit:${(state.current.imageFit||'contain')==='cover'?'cover':'contain'};background:#f1f5f9" src="${d.image}"><button class="img-remove" onclick="clearImg('${zid}','${d.id}')">${I.x}</button></div>`:`<div class="img-ph">${I.imgBig}</div>`)}
+      ${gallery}
       <div class="img-btns">
         <button class="img-btn" ${d._busy?"disabled":""} onclick="pickImg('${zid}','${d.id}',true)">${I.cam} צלם</button>
         <button class="img-btn" ${d._busy?"disabled":""} onclick="pickImg('${zid}','${d.id}',false)">${I.img} גלריה</button>
@@ -773,6 +859,8 @@ function moveZone(i,dir){const a=state.current.zones,j=i+dir;if(j<0||j>=a.length
 function addDefect(zid){findZone(zid).defects.push(blankDefect());render();}
 function delDefect(zid,did){const z=findZone(zid);z.defects=z.defects.filter(d=>d.id!==did);render();}
 function moveDefect(zid,i,dir){const z=findZone(zid);const a=z.defects;const j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();}
+function moveDefectImage(zid,did,i,dir){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;const a=defectImages(d),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();scheduleAutosave();}
+function dupDefect(zid,did){const z=findZone(zid);const i=z.defects.findIndex(x=>x.id===did);if(i<0)return;const c=JSON.parse(JSON.stringify(z.defects[i]));c.id=uid();delete c._busy;z.defects.splice(i+1,0,c);render();scheduleAutosave();}
 
 // ----- גרירת ליקוי לשינוי סדר (עכבר + מגע) -----
 let dragState=null;
@@ -822,25 +910,30 @@ function defectDragEnd(){
   render(); // עדכון המספור (1.1, 1.2…)
 }
 function toggleSev(zid,did,sid){const d=findZone(zid).defects.find(x=>x.id===did);d.severity=d.severity===sid?"":sid;render();}
-function clearImg(zid,did){findZone(zid).defects.find(x=>x.id===did).image="";render();}
+function clearImg(zid,did,idx){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;defectImages(d).splice(idx,1);render();scheduleAutosave();}
 function pickImg(zid,did,cam){pendingImg={zid,did};document.getElementById(cam?"camInput":"fileInput").click();}
 async function handleFile(input){
-  const file=input.files&&input.files[0];input.value="";
-  if(!file||!pendingImg)return;
-  const d=findZone(pendingImg.zid).defects.find(x=>x.id===pendingImg.did);
+  const files=input.files?Array.from(input.files):[];input.value="";
+  if(!files.length||!pendingImg)return;
   const pend=pendingImg;pendingImg=null;
-  if(!d)return;
-  d._busy=true;render();
-  try{
-    const data=await compressImage(file);
-    const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
-    if(dd){dd.image=data;dd._busy=false;}
-  }catch(err){
-    const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
-    if(dd)dd._busy=false;
-    alert("לא ניתן היה לעבד את התמונה. נסה שוב או בחר תמונה אחרת.");
+  const d0=findZone(pend.zid)&&findZone(pend.zid).defects.find(x=>x.id===pend.did);
+  if(!d0)return;
+  d0._busy=true;render();
+  let heicFail=false,otherFail=false;
+  for(const file of files){
+    try{
+      const data=await compressImage(file);
+      const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
+      if(dd)defectImages(dd).push(data);
+    }catch(err){
+      if(/heic|heif/i.test((file.name||"")+" "+(file.type||"")))heicFail=true;else otherFail=true;
+    }
   }
-  render();
+  const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
+  if(dd)dd._busy=false;
+  render();scheduleAutosave();
+  if(heicFail)alert("תמונת HEIC אינה נתמכת בדפדפן זה. ב-iPhone: הגדרות › מצלמה › פורמטים › 'תואם ביותר' (JPEG), או שתפו/המירו את התמונה ל-JPEG ונסו שוב.");
+  else if(otherFail)alert("חלק מהתמונות לא עובדו. נסו שוב או בחרו תמונה אחרת.");
 }
 document.getElementById("fileInput").addEventListener("change",e=>handleFile(e.target));
 document.getElementById("camInput").addEventListener("change",e=>handleFile(e.target));
@@ -855,12 +948,12 @@ async function applyPaste(blob,zid,did){
     const file=new File([blob],"paste.png",{type:blob.type||"image/png"});
     const data=await compressImage(file);
     const dd=findZone(zid).defects.find(x=>x.id===did);
-    if(dd){dd.image=data;dd._busy=false;}
+    if(dd)defectImages(dd).push(data);
   }catch(err){
-    const dd=findZone(zid).defects.find(x=>x.id===did);if(dd)dd._busy=false;
     alert("לא ניתן היה לעבד את התמונה שהודבקה.");
+  }finally{
+    const dd=findZone(zid).defects.find(x=>x.id===did);if(dd)dd._busy=false;render();scheduleAutosave();
   }
-  render();
 }
 function pasteImg(zid,did){
   // ללא בקשת הרשאה: רק מסמנים יעד; ההדבקה מתבצעת ב-Ctrl/Cmd+V (לא דורש אישור דפדפן)
@@ -1150,8 +1243,10 @@ function printHTML(){
           ${sev?`<span class="doc-tag" style="color:${sev.color};border-color:${sev.border};background:${sev.bg}">חומרה: ${sev.label}</span>`:""}
           ${d.category?`<span class="doc-tag" style="color:${t.primaryColor};border-color:${t.primaryColor}55;background:${t.primaryColor}11">קטגוריה: ${esc(d.category)}</span>`:""}
         </div>`:"";
+        const imgs=defectImages(d);
+        const imgsHTML=imgs.length?`<div class="doc-imgs">${imgs.map(src=>`<img class="doc-img" style="${imgStyle}" src="${esc(src)}">`).join("")}</div>`:`<div class="doc-img-empty"></div>`;
         return `<div class="doc-defect">
-          ${d.image?`<img class="doc-img" style="${imgStyle}" src="${d.image}">`:`<div class="doc-img-empty"></div>`}
+          ${imgsHTML}
           <div class="doc-defect-text"><p class="doc-defect-desc"><span class="doc-defect-num">${zi+1}.${di+1}</span>${esc(d.description)}</p>${tags}</div>
         </div>`;
       }).join("")}
@@ -1161,8 +1256,9 @@ function printHTML(){
   <div class="print-toolbar no-print">
     <button class="link-btn" onclick="go('edit')">${I.arrow} חזרה לעריכה</button>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn-ghost-sm" onclick="saveReportFile()">${I.download} שמור דוח כקובץ</button>
-      <button class="btn-print" onclick="window.print()">${I.printer} הדפס / שמור כ-PDF</button>
+      <button class="btn-ghost-sm" onclick="saveReportFile()">${I.download} שמור כ-HTML</button>
+      <button class="btn-ghost-sm" onclick="window.print()">${I.printer} הדפס</button>
+      <button class="btn-print" onclick="exportPDF()">${I.download} ייצוא PDF</button>
     </div>
   </div>
   <div class="print-doc" id="printDoc" style="--blue:${t.primaryColor}">
@@ -1296,6 +1392,7 @@ document.getElementById("importInput").addEventListener("change",async e=>{
     for(const t of templates)if(t&&t.id)await DB.put("templates",t);
     state.reports=await DB.all("reports");state.folders=await DB.all("folders");state.templates=await DB.all("templates");
     if(state.templates.length===0){const d=defaultTemplate();await DB.put("templates",d);state.templates=[d];}
+    normalizeReports(state.reports);
     state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
     render();alert("השחזור הושלם: "+reports.length+" דוחות, "+folders.length+" תיקיות, "+templates.length+" תבניות.");
   }catch(err){alert("הקובץ אינו תקין.");}
@@ -1305,6 +1402,130 @@ document.getElementById("importInput").addEventListener("change",async e=>{
 function showChangelog(){
   const lines=CHANGELOG.map(c=>`v${c.v} — ${c.d}`).join("\n");
   alert("REPORTpro · פיקוח עליון ובקרה הנדסית\nגרסה נוכחית: "+APP_VERSION+"\n\nהיסטוריית עדכונים:\n"+lines);
+}
+
+// ============================================================
+//  LIGHTBOX — הגדלת תמונות בלחיצה
+// ============================================================
+let lbState=null;
+function openLightbox(srcs,idx){
+  srcs=(srcs||[]).filter(Boolean);
+  if(!srcs.length)return;
+  lbState={srcs,idx:Math.max(0,Math.min(idx||0,srcs.length-1))};
+  renderLightbox();
+}
+function closeLightbox(){lbState=null;const el=document.getElementById("lightbox");if(el)el.remove();}
+function lbNav(delta){if(!lbState)return;const n=lbState.srcs.length;lbState.idx=(lbState.idx+delta+n)%n;renderLightbox();}
+function renderLightbox(){
+  let el=document.getElementById("lightbox");
+  if(!el){el=document.createElement("div");el.id="lightbox";el.onclick=closeLightbox;document.body.appendChild(el);}
+  const s=lbState.srcs,idx=lbState.idx,multi=s.length>1;
+  el.innerHTML=`<button class="lb-close" title="סגור" onclick="event.stopPropagation();closeLightbox()">${I.x}</button>`
+    +(multi?`<button class="lb-nav lb-prev" title="הקודם" onclick="event.stopPropagation();lbNav(-1)">‹</button>`:"")
+    +`<img class="lb-img" src="${esc(s[idx])}" onclick="event.stopPropagation()">`
+    +(multi?`<button class="lb-nav lb-next" title="הבא" onclick="event.stopPropagation();lbNav(1)">›</button>`:"")
+    +(multi?`<div class="lb-count">${idx+1} / ${s.length}</div>`:"");
+}
+// לחיצה על תמונה (עורך או תצוגת דוח) פותחת תצוגה מוגדלת — דלגציה גלובלית, ללא onclick מוטבע כדי שקובץ מיוצא יישאר סטטי
+document.addEventListener("click",e=>{
+  const img=e.target&&e.target.closest&&e.target.closest(".thumb,.doc-img");
+  if(!img)return;
+  const box=img.closest(".img-grid,.doc-imgs");
+  const list=box?[...box.querySelectorAll("img")]:[img];
+  openLightbox(list.map(x=>x.getAttribute("src")),list.indexOf(img));
+});
+document.addEventListener("keydown",e=>{
+  if(!lbState)return;
+  if(e.key==="Escape")closeLightbox();
+  else if(e.key==="ArrowRight")lbNav(1);
+  else if(e.key==="ArrowLeft")lbNav(-1);
+});
+
+// ============================================================
+//  PDF — הפקה ישירה ללא חלון הדפסה (html2canvas + jsPDF, טעינה עצלה מ-CDN, נפילה ל-print)
+// ============================================================
+function showBusyOverlay(text){
+  hideBusyOverlay();
+  const el=document.createElement("div");el.id="busyOverlay";
+  el.style.cssText="position:fixed;inset:0;z-index:110;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center";
+  el.innerHTML='<div style="background:#fff;border-radius:14px;padding:20px 26px;font-family:var(--font-body);font-weight:700;color:#0f172a;display:flex;align-items:center;gap:12px;box-shadow:0 10px 40px rgba(0,0,0,.3)"><span style="width:20px;height:20px;border:3px solid #cbd5e1;border-top-color:var(--blue);border-radius:50%;display:inline-block;animation:lbspin .8s linear infinite"></span><span>'+esc(text||"מעבד…")+'</span></div>';
+  document.body.appendChild(el);
+}
+function hideBusyOverlay(){const el=document.getElementById("busyOverlay");if(el)el.remove();}
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=()=>res();s.onerror=()=>rej(new Error("load "+src));document.head.appendChild(s);});}
+let _pdfLibs=null;
+function loadPdfLibs(){
+  if(_pdfLibs)return _pdfLibs;
+  _pdfLibs=(async()=>{
+    if(!window.html2canvas)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js");
+    if(!(window.jspdf&&window.jspdf.jsPDF))await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  })();
+  return _pdfLibs;
+}
+async function saveBlob(blob,filename,mime,ext){
+  if(window.showSaveFilePicker){
+    try{
+      const h=await window.showSaveFilePicker({suggestedName:filename,types:[{description:ext.replace(".","").toUpperCase(),accept:{[mime]:[ext]}}]});
+      const w=await h.createWritable();await w.write(blob);await w.close();return;
+    }catch(e){if(e&&e.name==="AbortError")return;}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
+}
+async function exportPDF(){
+  const doc=document.getElementById("printDoc");
+  if(!doc){alert("פתחו את תצוגת הדוח תחילה.");return;}
+  showBusyOverlay("טוען מנוע PDF…");
+  let jsPDFctor,h2c;
+  try{
+    await loadPdfLibs();
+    jsPDFctor=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
+    h2c=window.html2canvas;
+    if(!jsPDFctor||!h2c)throw new Error("libs");
+  }catch(err){
+    hideBusyOverlay();
+    if(confirm("הפקת PDF ישירה אינה זמינה (ייתכן שאין חיבור לאינטרנט). לפתוח את חלון ההדפסה של הדפדפן במקום?"))window.print();
+    return;
+  }
+  const prevWidth=doc.style.width;
+  try{
+    showBusyOverlay("מפיק PDF…");
+    try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
+    // רוחב קבוע לרינדור עקבי של ה-PDF ללא תלות ברוחב המסך/המכשיר (מונע פריסת מובייל ועמודים שגויים)
+    doc.style.width="760px";
+    const scale=doc.scrollHeight*2>30000?Math.max(1,Math.floor(30000/doc.scrollHeight)):2;
+    const canvas=await h2c(doc,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900,windowHeight:Math.max(doc.scrollHeight+120,1200)});
+    const pdf=new jsPDFctor({unit:"pt",format:"a4",orientation:"portrait"});
+    const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
+    const margin=28,contentW=pageW-margin*2;
+    const pxPerPt=canvas.width/contentW;
+    const pageContentHpx=(pageH-margin*2)*pxPerPt;
+    // נקודות חיתוך מועדפות: תחתית כל בלוק, כדי לא לחתוך ליקוי/תמונה באמצע העמוד
+    const base=doc.getBoundingClientRect().top;
+    const bounds=[];
+    doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect,.doc-summary,.doc-signwrap,.doc-footer").forEach(el=>{bounds.push((el.getBoundingClientRect().bottom-base)*scale);});
+    bounds.sort((a,b)=>a-b);
+    const pc=document.createElement("canvas"),ctx=pc.getContext("2d");
+    let startPx=0,first=true;const total=canvas.height;
+    while(startPx<total-1){
+      let endPx=Math.min(startPx+pageContentHpx,total);
+      if(endPx<total){let cut=-1;for(const b of bounds){if(b>startPx+20&&b<=endPx)cut=b;}if(cut>startPx+20)endPx=cut;}
+      const sliceH=Math.max(1,Math.round(endPx-startPx));
+      pc.width=canvas.width;pc.height=sliceH;
+      ctx.fillStyle="#fff";ctx.fillRect(0,0,pc.width,sliceH);
+      ctx.drawImage(canvas,0,startPx,canvas.width,sliceH,0,0,canvas.width,sliceH);
+      if(!first)pdf.addPage();first=false;
+      pdf.addImage(pc.toDataURL("image/jpeg",0.82),"JPEG",margin,margin,contentW,sliceH/pxPerPt,undefined,"FAST");
+      startPx=endPx;
+    }
+    doc.style.width=prevWidth;
+    const blob=pdf.output("blob");
+    hideBusyOverlay();
+    await saveBlob(blob,safeName(state.current.title+" "+(state.current.date||""))+".pdf","application/pdf",".pdf");
+  }catch(err){
+    doc.style.width=prevWidth;
+    hideBusyOverlay();
+    if(confirm("אירעה שגיאה בהפקת ה-PDF. לפתוח את חלון ההדפסה של הדפדפן במקום?"))window.print();
+  }
 }
 
 document.getElementById('verBtn').textContent="v"+APP_VERSION;
