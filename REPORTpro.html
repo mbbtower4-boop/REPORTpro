@@ -190,13 +190,12 @@
   .doc-note{font-size:13px;color:#334155;padding:8px 4px;line-height:1.6}
   .doc-zone{margin-top:20px;break-inside:avoid}
   .doc-zone-title{font-family:var(--font-head);font-size:17px;font-weight:700;color:var(--blue);border-bottom:2px solid #f1f5f9;padding-bottom:6px;margin-bottom:6px}
-  .doc-defect{display:flex;gap:16px;padding:14px 0;border-bottom:1px dashed #e8edf3;break-inside:avoid;align-items:flex-start}
+  .doc-defect{display:flex;gap:14px;padding:14px 0;border-bottom:1px dashed #e8edf3;break-inside:avoid;align-items:flex-start}
   .doc-img{width:200px;height:160px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid var(--line);cursor:zoom-in}
-  .doc-img-empty{width:200px;height:30px;flex-shrink:0}
   .doc-imgs{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
-  .doc-defect-text{flex:1;padding-top:4px}
+  .doc-defect-text{flex:1;min-width:0}
   .doc-defect-desc{font-size:14.5px;line-height:1.6;margin:0;color:#1e293b}
-  .doc-defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);margin-inline-end:8px}
+  .doc-defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);font-size:15px;line-height:1.6;min-width:30px;flex-shrink:0}
   .doc-tags{display:flex;gap:8px;margin-top:10px}
   .doc-tag{font-size:12px;font-weight:700;padding:4px 12px;border-radius:8px;border:1.5px solid}
   .doc-summary{margin-top:28px;border:2px solid var(--blue);border-radius:10px;padding:20px;break-inside:avoid}
@@ -220,6 +219,8 @@
     header,.action-bar,.print-toolbar,.no-print,#lightbox,#busyOverlay{display:none!important}
     .container{padding:0;max-width:100%}
     .print-doc{box-shadow:none;margin:0;max-width:100%;padding:0;border-radius:0}
+    /* כל אזור (מלבד הראשון) מתחיל בעמוד חדש */
+    .doc-zone.zone-break{break-before:page;page-break-before:always}
     /* מניעת עמוד ריק בסוף: ביטול מרווחים תחתונים בסוף המסמך */
     .doc-signwrap{margin-top:22px}
     .doc-footer{margin-top:12px;padding-top:10px;margin-bottom:0}
@@ -266,8 +267,11 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.29.0";
+const APP_VERSION="1.32.0";
 const CHANGELOG=[
+  {v:"1.32.0",d:"כל אזור בייצוא הדוח מתחיל בעמוד נפרד — אזור חדש לא מתחיל באמצע עמוד יחד עם אזור קודם (חל גם בהדפסה וגם בייצוא PDF הישיר)"},
+  {v:"1.31.0",d:"סידור גרפי של הדוח ב-PDF: מעברי שורה נשמרים בהערות כלליות, סיכום ותיאורי ליקויים; ופריסת ליקוי אחידה — מספור מיושר בעמודה קבועה, התיאור נפרש לכל הרוחב כשאין תמונה, והתמונה בצד קבוע (ללא רווח ריק כשאין תמונה)"},
+  {v:"1.30.0",d:"שדה 'תפוצה' בפרטי הדוח הפך לתיבת טקסט רב-שורתית — ניתן להזין כמה שורות (למשל נמענים שונים), והן מוצגות בהתאם ב-PDF"},
   {v:"1.29.0",d:"תיקיית גיבוי קבועה: אפשר להגדיר תיקייה (למשל תיקיית הפרויקט) פעם אחת, ומעכשיו כפתור 'גיבוי' שומר אליה אוטומטית קובץ מתוארך — בלי לחפש בתיקיית ההורדות (Chrome/Edge במחשב; בשאר הדפדפנים/מובייל — הורדה רגילה)"},
   {v:"1.28.0",d:"שדה 'מספר תוכנית' בפרטי הדוח הפך לתיבת טקסט רב-שורתית — ניתן להזין כמה שורות, והן מוצגות בהתאם ב-PDF"},
   {v:"1.27.2",d:"כיול קוסמטי לכרטיס הגרירה: ללא הטיה/'עקמומיות', והתוכן מיושר בדיוק מעל הליקוי המקורי בזמן הגרירה"},
@@ -766,7 +770,7 @@ function editHTML(){
         <div><label class="lbl">שלב ביצוע</label><input class="input" data-f="stage" value="${esc(r.stage)}"></div>
         <div class="full"><label class="lbl">${I.pin} מיקום</label><input class="input" data-f="location" value="${esc(r.location)}" placeholder="רחוב הרצל / שד' הקיבוצים / משה מזרחי"></div>
         <div><label class="lbl">עורך</label><input class="input" data-f="editor" value="${esc(r.editor)}"></div>
-        <div><label class="lbl">תפוצה</label><input class="input" data-f="distributionSuggestions" value="${esc(r.distributionSuggestions)}"></div>
+        <div class="full"><label class="lbl">תפוצה</label><textarea class="input" data-f="distributionSuggestions" rows="2" placeholder="ניתן להזין מספר שורות (למשל נמענים שונים)">${esc(r.distributionSuggestions)}</textarea></div>
         <div class="full"><label class="lbl">מספר תוכנית</label><textarea class="input" data-f="planNumber" rows="2" placeholder="ניתן להזין מספר שורות">${esc(r.planNumber)}</textarea></div>
         <div><label class="lbl">מהדורה</label><input class="input" data-f="revision" value="${esc(r.revision||"")}" placeholder="01"></div>
         <div><label class="lbl">${I.cal} תאריך עדכון</label><input class="input" type="date" data-f="revisionDate" value="${esc(r.revisionDate||"")}"></div>
@@ -1344,7 +1348,7 @@ function printHTML(){
     ? `width:${isz}px;height:${Math.round(isz*0.78)}px;object-fit:cover`
     : `width:${isz}px;height:auto;max-height:${Math.round(isz*1.3)}px;object-fit:contain;background:#f8fafc`;
   const zones=r.zones.map((z,zi)=>`
-    <div class="doc-zone">
+    <div class="doc-zone${zi>0?' zone-break':''}">
       <h2 class="doc-zone-title">${zi+1}. ${esc(z.title)||"אזור"}</h2>
       ${z.defects.map((d,di)=>{
         const sev=sevOf(d.severity);
@@ -1353,10 +1357,11 @@ function printHTML(){
           ${d.category?`<span class="doc-tag" style="color:${t.primaryColor};border-color:${t.primaryColor}55;background:${t.primaryColor}11">קטגוריה: ${esc(d.category)}</span>`:""}
         </div>`:"";
         const imgs=defectImages(d);
-        const imgsHTML=imgs.length?`<div class="doc-imgs">${imgs.map(src=>`<img class="doc-img" style="${imgStyle}" src="${esc(src)}">`).join("")}</div>`:`<div class="doc-img-empty"></div>`;
+        const imgsHTML=imgs.length?`<div class="doc-imgs">${imgs.map(src=>`<img class="doc-img" style="${imgStyle}" src="${esc(src)}">`).join("")}</div>`:"";
         return `<div class="doc-defect">
+          <div class="doc-defect-num">${zi+1}.${di+1}</div>
+          <div class="doc-defect-text"><p class="doc-defect-desc">${escMulti(d.description)}</p>${tags}</div>
           ${imgsHTML}
-          <div class="doc-defect-text"><p class="doc-defect-desc"><span class="doc-defect-num">${zi+1}.${di+1}</span>${esc(d.description)}</p>${tags}</div>
         </div>`;
       }).join("")}
     </div>`).join("");
@@ -1386,12 +1391,12 @@ function printHTML(){
       <div class="meta-row"><div class="meta-cell"><span class="meta-key">שלב ביצוע:</span> ${esc(r.stage)||"—"}</div><div class="meta-cell"><span class="meta-key">עורך:</span> ${esc(r.editor)||"—"}</div></div>
       ${(r.planNumber||r.revision)?`<div class="meta-row"><div class="meta-cell"><span class="meta-key">מספר תוכנית:</span> ${escMulti(r.planNumber)||"—"}</div><div class="meta-cell"><span class="meta-key">מהדורה:</span> ${esc(r.revision)||"—"}${r.revisionDate?` · עודכן ${esc(r.revisionDate)}`:""}</div></div>`:""}
     </div>
-    ${r.distributionSuggestions?`<div class="doc-note"><b>תפוצה: </b>${esc(r.distributionSuggestions)}</div>`:""}
-    ${r.generalNotes?`<div class="doc-note"><b>הערות כלליות: </b>${esc(r.generalNotes)}</div>`:""}
+    ${r.distributionSuggestions?`<div class="doc-note"><b>תפוצה: </b>${escMulti(r.distributionSuggestions)}</div>`:""}
+    ${r.generalNotes?`<div class="doc-note"><b>הערות כלליות: </b>${escMulti(r.generalNotes)}</div>`:""}
     ${zones}
     <div class="doc-summary">
       <h2 class="doc-summary-title">סיכום</h2>
-      <p style="margin:0">${esc(r.summary)}</p>
+      <p style="margin:0">${escMulti(r.summary)}</p>
     </div>
     <div class="doc-signwrap">
       <div class="doc-sign">
@@ -1684,11 +1689,21 @@ async function exportPDF(){
     const bounds=[];
     doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect,.doc-summary,.doc-signwrap,.doc-footer").forEach(el=>{bounds.push((el.getBoundingClientRect().bottom-base)*scale);});
     bounds.sort((a,b)=>a-b);
+    // שבירות עמוד כפויות: תחילת כל אזור חדש (מלבד הראשון) — כדי שכל אזור יתחיל בעמוד נפרד
+    const forced=[];
+    doc.querySelectorAll(".doc-zone.zone-break").forEach(el=>{forced.push((el.getBoundingClientRect().top-base)*scale);});
+    forced.sort((a,b)=>a-b);
     const pc=document.createElement("canvas"),ctx=pc.getContext("2d");
     let startPx=0,first=true;const total=canvas.height;
     while(startPx<total-1){
       let endPx=Math.min(startPx+pageContentHpx,total);
-      if(endPx<total){let cut=-1;for(const b of bounds){if(b>startPx+20&&b<=endPx)cut=b;}if(cut>startPx+20)endPx=cut;}
+      // שבירה כפויה לפני אזור חדש קודמת לחיתוך המועדף.
+      // סף (brkGuard) מונע עמוד "פירור" ריק כשאזור מתחיל ממש בראש העמוד הנוכחי.
+      let forcedCut=-1;
+      const brkGuard=36*scale;
+      for(const fb of forced){if(fb>startPx+brkGuard&&fb<=endPx){forcedCut=fb;break;}}
+      if(forcedCut>0)endPx=forcedCut;
+      else if(endPx<total){let cut=-1;for(const b of bounds){if(b>startPx+20&&b<=endPx)cut=b;}if(cut>startPx+20)endPx=cut;}
       const sliceH=Math.max(1,Math.round(endPx-startPx));
       pc.width=canvas.width;pc.height=sliceH;
       ctx.fillStyle="#fff";ctx.fillRect(0,0,pc.width,sliceH);
