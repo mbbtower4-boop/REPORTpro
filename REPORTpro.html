@@ -117,7 +117,11 @@
   .defect-move{display:flex;flex-direction:column;gap:4px}
   .drag-handle{touch-action:none;cursor:grab;width:28px;height:24px;display:flex;align-items:center;justify-content:center;color:#94a3b8;border:1px solid var(--line);border-radius:6px;background:#fff;padding:0}
   .drag-handle:active{cursor:grabbing;background:#eff6ff;color:var(--blue)}
-  .defect.dragging{opacity:.65;background:#eff6ff;border-radius:10px;box-shadow:0 8px 22px rgba(29,78,216,.22)}
+  /* גרירת ליקוי: מציין מקום (איפה ישוחרר) + רפאים צף שעוקב אחרי הסמן */
+  .defect.drag-placeholder{opacity:.4;background:#eff6ff;border-radius:10px;outline:2px dashed var(--blue);outline-offset:-2px}
+  .drag-ghost{position:fixed;z-index:60;pointer-events:none;margin:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 34px rgba(29,78,216,.3);opacity:.97;cursor:grabbing}
+  body.dragging-active{cursor:grabbing;touch-action:none}
+  body.dragging-active *{cursor:grabbing!important;user-select:none!important}
   .icon-btn-sm{width:28px;height:26px;border-radius:6px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;color:#475569;cursor:pointer}
   .icon-btn-sm:disabled{opacity:.3}
   .icon-btn-sm:active{background:#eff6ff}
@@ -262,8 +266,13 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.26.0";
+const APP_VERSION="1.29.0";
 const CHANGELOG=[
+  {v:"1.29.0",d:"תיקיית גיבוי קבועה: אפשר להגדיר תיקייה (למשל תיקיית הפרויקט) פעם אחת, ומעכשיו כפתור 'גיבוי' שומר אליה אוטומטית קובץ מתוארך — בלי לחפש בתיקיית ההורדות (Chrome/Edge במחשב; בשאר הדפדפנים/מובייל — הורדה רגילה)"},
+  {v:"1.28.0",d:"שדה 'מספר תוכנית' בפרטי הדוח הפך לתיבת טקסט רב-שורתית — ניתן להזין כמה שורות, והן מוצגות בהתאם ב-PDF"},
+  {v:"1.27.2",d:"כיול קוסמטי לכרטיס הגרירה: ללא הטיה/'עקמומיות', והתוכן מיושר בדיוק מעל הליקוי המקורי בזמן הגרירה"},
+  {v:"1.27.1",d:"תיקון: הגרירה 'נתקעה' והגלילה לא עבדה תוך כדי גרירה — כעת הגרירה חלקה עם גלילה אוטומטית רציפה ליד קצה המסך והעברה חלקה בין אזורים"},
+  {v:"1.27.0",d:"גרירת ליקויים משופרת: רפאים צף שעוקב אחרי הסמן, גלילה אוטומטית בקצה המסך לרשימות ארוכות, והעברת ליקוי בגרירה מאזור אחד לאחר. בנוסף — הדבקת תמונה (Ctrl/Cmd+V) נכנסת לליקוי שבו נמצאים כרגע (הליקוי הפעיל / הנראה במסך) במקום לליקוי האחרון"},
   {v:"1.26.0",d:"תמונות מרובות לכל ליקוי (הוספה בצילום/גלריה/הדבקה, בחירת כמה קבצים יחד, סידור והסרה), הגדלת תמונה בלחיצה (לייטבוקס עם ניווט), חיפוש ומיון בארכיון, שכפול ליקוי, ייצוא PDF ישיר ללא חלון הדפסה, ושיפור עיבוד תמונות iPhone (כיוון EXIF ו-HEIC)"},
   {v:"1.25.0",d:"חיווי קבוע של מצב השמירה וזמן השמירה האחרונה בעת עריכת דוח"},
   {v:"1.24.0",d:"שמירה אוטומטית רציפה תוך כדי עבודה ובעת יציאה מהדוח — מונע אובדן עבודה"},
@@ -539,6 +548,7 @@ function homeHTML(){
       <button class="btn-ghost-sm" onclick="shareMenu()">${I.share} שתף</button>
       <button class="btn-ghost-sm" onclick="downloadApp()">${I.download} הורד קובץ</button>
       <button class="btn-ghost-sm" onclick="exportData()">${I.download} גיבוי</button>
+      ${window.showDirectoryPicker?`<button class="btn-ghost-sm" onclick="chooseBackupFolder()">${I.folder} תיקיית גיבוי</button>`:""}
       <button class="btn-ghost-sm" onclick="document.getElementById('importInput').click()">${I.upload} שחזור</button>
     </div>`;
 
@@ -757,7 +767,7 @@ function editHTML(){
         <div class="full"><label class="lbl">${I.pin} מיקום</label><input class="input" data-f="location" value="${esc(r.location)}" placeholder="רחוב הרצל / שד' הקיבוצים / משה מזרחי"></div>
         <div><label class="lbl">עורך</label><input class="input" data-f="editor" value="${esc(r.editor)}"></div>
         <div><label class="lbl">תפוצה</label><input class="input" data-f="distributionSuggestions" value="${esc(r.distributionSuggestions)}"></div>
-        <div class="full"><label class="lbl">מספר תוכנית</label><input class="input" data-f="planNumber" value="${esc(r.planNumber)}"></div>
+        <div class="full"><label class="lbl">מספר תוכנית</label><textarea class="input" data-f="planNumber" rows="2" placeholder="ניתן להזין מספר שורות">${esc(r.planNumber)}</textarea></div>
         <div><label class="lbl">מהדורה</label><input class="input" data-f="revision" value="${esc(r.revision||"")}" placeholder="01"></div>
         <div><label class="lbl">${I.cal} תאריך עדכון</label><input class="input" type="date" data-f="revisionDate" value="${esc(r.revisionDate||"")}"></div>
         <div class="full"><label class="lbl">הערות כלליות</label><textarea class="input" data-f="generalNotes" placeholder="דוח פיקוח עליון…">${esc(r.generalNotes)}</textarea></div>
@@ -810,7 +820,7 @@ function defectHTML(zid,d,zi,di,total){
   return `<div class="defect" data-did="${d.id}" data-zid="${zid}">
     <div class="defect-num-col">
       <div class="defect-num">${zi+1}.${di+1}</div>
-      <button class="drag-handle" title="גרור לשינוי סדר" onpointerdown="defectDragStart(event,'${zid}','${d.id}')">${I.grip}</button>
+      <button class="drag-handle" title="גרור לשינוי סדר או להעברה בין אזורים" onpointerdown="defectDragStart(event)">${I.grip}</button>
       <div class="defect-move">
         <button class="icon-btn-sm" ${di===0?"disabled":""} onclick="moveDefect('${zid}',${di},-1)" title="העבר מעלה">${I.up}</button>
         <button class="icon-btn-sm" ${di===total-1?"disabled":""} onclick="moveDefect('${zid}',${di},1)" title="העבר מטה">${I.down}</button>
@@ -862,21 +872,43 @@ function moveDefect(zid,i,dir){const z=findZone(zid);const a=z.defects;const j=i
 function moveDefectImage(zid,did,i,dir){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;const a=defectImages(d),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();scheduleAutosave();}
 function dupDefect(zid,did){const z=findZone(zid);const i=z.defects.findIndex(x=>x.id===did);if(i<0)return;const c=JSON.parse(JSON.stringify(z.defects[i]));c.id=uid();delete c._busy;z.defects.splice(i+1,0,c);render();scheduleAutosave();}
 
-// ----- גרירת ליקוי לשינוי סדר (עכבר + מגע) -----
+// ----- גרירת ליקוי: שינוי סדר + העברה בין אזורים (עכבר + מגע) -----
+// מאזינים ברמת window + לכידת מצביע על body (אלמנט יציב שלא זז) — כדי
+// שהגרירה לא תיתקע גם כשמזיזים את הכרטיס בין אזורים, וגלילה אוטומטית
+// כשמתקרבים לקצה המסך — לגרירה חלקה גם ברשימות ארוכות.
 let dragState=null;
-function defectDragStart(e,zid,did){
-  e.preventDefault();
+function defectDragStart(e){
+  if(e.pointerType==="mouse"&&e.button!==0)return; // רק לחצן שמאלי בעכבר
   const el=e.target.closest(".defect");
   if(!el)return;
-  try{el.setPointerCapture(e.pointerId);}catch(_){}
-  dragState={zid,el,pointerId:e.pointerId};
-  el.classList.add("dragging");
-  el.addEventListener("pointermove",defectDragMove);
-  el.addEventListener("pointerup",defectDragEnd);
-  el.addEventListener("pointercancel",defectDragEnd);
+  e.preventDefault();
+  const rect=el.getBoundingClientRect();
+  const PAD=14; // ריפוד אחיד לכרטיס הצף; מקוזז אופקית כדי שהתוכן יישאר מיושר בדיוק מול המקור
+  const ghost=el.cloneNode(true);
+  ghost.classList.remove("drag-placeholder");
+  ghost.classList.add("drag-ghost");
+  ghost.style.padding=PAD+"px";
+  ghost.style.width=(rect.width+PAD*2)+"px";
+  ghost.style.left=(rect.left-PAD)+"px";
+  ghost.style.top=rect.top+"px";
+  document.body.appendChild(ghost);
+  el.classList.add("drag-placeholder");
+  document.body.classList.add("dragging-active");
+  dragState={
+    el,ghost,pointerId:e.pointerId,
+    grabDX:e.clientX-rect.left+PAD,grabDY:e.clientY-rect.top,
+    lastX:e.clientX,lastY:e.clientY,moved:false,raf:0
+  };
+  // לכידה על body: שומרת אירועים גם מחוץ לחלון, ולא מתנתקת כשהכרטיס מוזז ב-DOM
+  try{document.body.setPointerCapture(e.pointerId);}catch(_){}
+  window.addEventListener("pointermove",defectDragMove);
+  window.addEventListener("pointerup",defectDragEnd);
+  window.addEventListener("pointercancel",defectDragEnd);
+  window.addEventListener("blur",defectDragEnd);
+  dragState.raf=requestAnimationFrame(dragTick);
 }
 function dragAfterElement(zoneBody,y){
-  const els=[...zoneBody.querySelectorAll(".defect:not(.dragging)")];
+  const els=[...zoneBody.querySelectorAll(".defect:not(.drag-placeholder)")];
   let closest={offset:Number.NEGATIVE_INFINITY,el:null};
   for(const child of els){
     const box=child.getBoundingClientRect();
@@ -885,29 +917,69 @@ function dragAfterElement(zoneBody,y){
   }
   return closest.el;
 }
+// גוף-האזור שמעליו נמצא הסמן (או הראשון/אחרון אם מחוץ לכולם) — מאפשר מעבר בין אזורים
+function zoneBodyAt(y){
+  const bodies=[...document.querySelectorAll(".zone-body")];
+  if(!bodies.length)return null;
+  for(const b of bodies){
+    const r=b.getBoundingClientRect();
+    if(y>=r.top&&y<=r.bottom)return b;
+  }
+  if(y<bodies[0].getBoundingClientRect().top)return bodies[0];
+  return bodies[bodies.length-1];
+}
+function updateDragPosition(){
+  if(!dragState)return;
+  const body=zoneBodyAt(dragState.lastY);
+  if(!body)return;
+  const after=dragAfterElement(body,dragState.lastY);
+  const ref=(after==null)?body.querySelector(".add-defect"):after;
+  // הימנע מהזזה מיותרת ב-DOM אם הכרטיס כבר במקום הנכון
+  if(dragState.el.parentElement===body&&dragState.el.nextSibling===ref)return;
+  body.insertBefore(dragState.el,ref);
+}
 function defectDragMove(e){
   if(!dragState)return;
-  const zoneBody=dragState.el.parentElement;
-  const after=dragAfterElement(zoneBody,e.clientY);
-  const addBtn=zoneBody.querySelector(".add-defect");
-  if(after==null)zoneBody.insertBefore(dragState.el,addBtn);
-  else zoneBody.insertBefore(dragState.el,after);
-  // עדכון סדר ה-state לפי סדר ה-DOM
-  const z=findZone(dragState.zid);
-  if(z){
-    const order=[...zoneBody.querySelectorAll(".defect")].map(el=>el.dataset.did);
-    z.defects.sort((a,b)=>order.indexOf(a.id)-order.indexOf(b.id));
-  }
+  dragState.lastX=e.clientX;dragState.lastY=e.clientY;dragState.moved=true;
+  dragState.ghost.style.left=(e.clientX-dragState.grabDX)+"px";
+  dragState.ghost.style.top=(e.clientY-dragState.grabDY)+"px";
+  updateDragPosition();
+}
+// גלילה אוטומטית רציפה כשהסמן ליד קצה המסך (פועלת גם כשהאצבע/העכבר עומדים במקום)
+function dragTick(){
+  if(!dragState)return;
+  const y=dragState.lastY,vh=window.innerHeight,margin=120;
+  let dy=0;
+  if(y<margin)dy=-Math.ceil((margin-y)/4)-3;
+  else if(y>vh-margin)dy=Math.ceil((y-(vh-margin))/4)+3;
+  if(dy){window.scrollBy(0,dy);updateDragPosition();}
+  dragState.raf=requestAnimationFrame(dragTick);
+}
+// שחזור מערך הליקויים (וגם השיוך לאזור) מסדר ה-DOM לאחר שחרור
+function rebuildDefectOrderFromDOM(){
+  const r=state.current;if(!r)return;
+  const byId={};
+  r.zones.forEach(z=>z.defects.forEach(d=>{byId[d.id]=d;}));
+  document.querySelectorAll(".zone").forEach(zEl=>{
+    const z=r.zones.find(x=>x.id===zEl.dataset.zid);
+    if(!z)return;
+    z.defects=[...zEl.querySelectorAll(".defect")].map(el=>byId[el.dataset.did]).filter(Boolean);
+  });
 }
 function defectDragEnd(){
   if(!dragState)return;
-  const el=dragState.el;
-  el.classList.remove("dragging");
-  el.removeEventListener("pointermove",defectDragMove);
-  el.removeEventListener("pointerup",defectDragEnd);
-  el.removeEventListener("pointercancel",defectDragEnd);
+  cancelAnimationFrame(dragState.raf);
+  const {el,ghost,pointerId,moved}=dragState;
+  window.removeEventListener("pointermove",defectDragMove);
+  window.removeEventListener("pointerup",defectDragEnd);
+  window.removeEventListener("pointercancel",defectDragEnd);
+  window.removeEventListener("blur",defectDragEnd);
+  try{document.body.releasePointerCapture(pointerId);}catch(_){}
+  if(ghost)ghost.remove();
+  el.classList.remove("drag-placeholder");
+  document.body.classList.remove("dragging-active");
   dragState=null;
-  render(); // עדכון המספור (1.1, 1.2…)
+  if(moved){rebuildDefectOrderFromDOM();render();} // עדכון מספור (1.1, 1.2…) + שמירה אוטומטית
 }
 function toggleSev(zid,did,sid){const d=findZone(zid).defects.find(x=>x.id===did);d.severity=d.severity===sid?"":sid;render();}
 function clearImg(zid,did,idx){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;defectImages(d).splice(idx,1);render();scheduleAutosave();}
@@ -958,7 +1030,42 @@ async function applyPaste(blob,zid,did){
 function pasteImg(zid,did){
   // ללא בקשת הרשאה: רק מסמנים יעד; ההדבקה מתבצעת ב-Ctrl/Cmd+V (לא דורש אישור דפדפן)
   pasteTarget={zid,did};
+  activeDefect={zid,did};
   showPasteHint();
+}
+// ----- מעקב אחרי הליקוי ה"פעיל" (זה שהמשתמש נמצא בו כרגע) לצורך הדבקה מדויקת -----
+let activeDefect=null;
+function setActiveDefect(el){
+  const d=el&&el.closest&&el.closest(".defect");
+  if(!d||!d.dataset.did)return;
+  activeDefect={zid:d.dataset.zid,did:d.dataset.did};
+  // אם המשתמש עבר לליקוי אחר — בטל יעד הדבקה ישן שנקבע בכפתור "הדבק"
+  if(pasteTarget&&(pasteTarget.zid!==activeDefect.zid||pasteTarget.did!==activeDefect.did))pasteTarget=null;
+}
+document.addEventListener("focusin",e=>{if(state.view==="edit")setActiveDefect(e.target);});
+document.addEventListener("pointerdown",e=>{if(state.view==="edit")setActiveDefect(e.target);},true);
+// היעד הפעיל — רק אם עדיין קיים בדוח וגם נראה במסך (אחרת נעדיף את מה שרואים כרגע)
+function activeDefectTarget(){
+  if(!activeDefect)return null;
+  const z=findZone(activeDefect.zid);
+  if(!z||!z.defects.some(d=>d.id===activeDefect.did))return null;
+  const el=document.querySelector('.defect[data-did="'+activeDefect.did+'"]');
+  if(!el)return null;
+  const r=el.getBoundingClientRect();
+  if(r.bottom<40||r.top>window.innerHeight-40)return null; // גלל מחוץ למסך
+  return activeDefect;
+}
+// הליקוי הקרוב ביותר למרכז המסך (מה שהמשתמש רואה עכשיו) — נפילה חיננית
+function visibleDefectTarget(){
+  const els=[...document.querySelectorAll(".defect")];
+  const vh=window.innerHeight,cy=vh/2;let best=null,bestDist=Infinity;
+  for(const el of els){
+    const r=el.getBoundingClientRect();
+    if(r.bottom<0||r.top>vh)continue;
+    const dist=Math.abs((r.top+r.bottom)/2-cy);
+    if(dist<bestDist){bestDist=dist;best=el;}
+  }
+  return best?{zid:best.dataset.zid,did:best.dataset.did}:null;
 }
 let pasteHintEl=null;
 function showPasteHint(){
@@ -998,7 +1105,9 @@ document.addEventListener("paste",e=>{
       const blob=it.getAsFile();
       if(blob){
         e.preventDefault();hidePasteHint();
-        const tgt=pasteTarget||lastDefectTarget();
+        // סדר עדיפויות: יעד מפורש מכפתור "הדבק" ← הליקוי הפעיל (בו המשתמש נמצא)
+        // ← הליקוי הנראה במרכז המסך ← הליקוי האחרון (רשת ביטחון)
+        const tgt=pasteTarget||activeDefectTarget()||visibleDefectTarget()||lastDefectTarget();
         if(!tgt){alert("בחר קודם ליקוי (לחץ על 'הדבק' בליקוי הרצוי) ואז הדבק.");return;}
         pasteTarget=null;applyPaste(blob,tgt.zid,tgt.did);
       }
@@ -1275,7 +1384,7 @@ function printHTML(){
     <div class="meta-table">
       <div class="meta-row"><div class="meta-cell"><span class="meta-key">תאריך:</span> ${esc(r.date)||"—"}</div><div class="meta-cell"><span class="meta-key">מיקום:</span> ${esc(r.location)||"—"}</div></div>
       <div class="meta-row"><div class="meta-cell"><span class="meta-key">שלב ביצוע:</span> ${esc(r.stage)||"—"}</div><div class="meta-cell"><span class="meta-key">עורך:</span> ${esc(r.editor)||"—"}</div></div>
-      ${(r.planNumber||r.revision)?`<div class="meta-row"><div class="meta-cell"><span class="meta-key">מספר תוכנית:</span> ${esc(r.planNumber)||"—"}</div><div class="meta-cell"><span class="meta-key">מהדורה:</span> ${esc(r.revision)||"—"}${r.revisionDate?` · עודכן ${esc(r.revisionDate)}`:""}</div></div>`:""}
+      ${(r.planNumber||r.revision)?`<div class="meta-row"><div class="meta-cell"><span class="meta-key">מספר תוכנית:</span> ${escMulti(r.planNumber)||"—"}</div><div class="meta-cell"><span class="meta-key">מהדורה:</span> ${esc(r.revision)||"—"}${r.revisionDate?` · עודכן ${esc(r.revisionDate)}`:""}</div></div>`:""}
     </div>
     ${r.distributionSuggestions?`<div class="doc-note"><b>תפוצה: </b>${esc(r.distributionSuggestions)}</div>`:""}
     ${r.generalNotes?`<div class="doc-note"><b>הערות כלליות: </b>${esc(r.generalNotes)}</div>`:""}
@@ -1298,11 +1407,82 @@ function printHTML(){
 }
 
 // ---------- EXPORT / IMPORT (גיבוי מלא) ----------
-function exportData(){
+// תיקיית גיבוי קבועה (File System Access API — Chrome/Edge במחשב).
+// שומר את ה-handle של התיקייה במסד נתונים מבודד משלו כדי לא לגעת באחסון הראשי.
+let _bdirDB=null;
+function backupDirDB(){
+  if(_bdirDB)return _bdirDB;
+  _bdirDB=new Promise((res)=>{
+    try{
+      if(typeof indexedDB==="undefined")return res(null);
+      const r=indexedDB.open("carmin_backupdir",1);
+      r.onupgradeneeded=e=>{const db=e.target.result;if(!db.objectStoreNames.contains("h"))db.createObjectStore("h");};
+      r.onsuccess=e=>res(e.target.result);
+      r.onerror=()=>res(null);
+    }catch(e){res(null);}
+  });
+  return _bdirDB;
+}
+async function getSavedBackupDir(){
+  const db=await backupDirDB();if(!db)return null;
+  try{return await new Promise((res)=>{const rq=db.transaction("h","readonly").objectStore("h").get("dir");rq.onsuccess=()=>res(rq.result||null);rq.onerror=()=>res(null);});}
+  catch(e){return null;}
+}
+async function saveBackupDir(handle){
+  const db=await backupDirDB();if(!db)return;
+  try{await new Promise((res)=>{const tx=db.transaction("h","readwrite");tx.objectStore("h").put(handle,"dir");tx.oncomplete=res;tx.onerror=res;});}catch(e){}
+}
+async function clearBackupDir(){
+  const db=await backupDirDB();if(!db)return;
+  try{await new Promise((res)=>{const tx=db.transaction("h","readwrite");tx.objectStore("h").delete("dir");tx.oncomplete=res;tx.onerror=res;});}catch(e){}
+}
+async function ensureDirPerm(handle){
+  if(!handle||!handle.queryPermission)return false;
+  const opts={mode:"readwrite"};
+  try{
+    if((await handle.queryPermission(opts))==="granted")return true;
+    if((await handle.requestPermission(opts))==="granted")return true;
+  }catch(e){}
+  return false;
+}
+function backupFileName(){return "carmin-backup-"+new Date().toISOString().slice(0,10)+".json";}
+function downloadBackup(json){
+  const blob=new Blob([json],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=backupFileName();a.click();URL.revokeObjectURL(a.href);
+}
+async function writeBackupToDir(dir,json){
+  const fh=await dir.getFileHandle(backupFileName(),{create:true});
+  const w=await fh.createWritable();await w.write(new Blob([json],{type:"application/json"}));await w.close();
+}
+async function exportData(){
   const data={reports:state.reports,folders:state.folders,templates:state.templates};
-  const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);
-  a.download="carmin-backup-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href);
+  const json=JSON.stringify(data,null,2);
+  if(window.showDirectoryPicker){
+    let dir=await getSavedBackupDir();
+    // הגדרה בפעם הראשונה: בקש מהמשתמש לבחור את תיקיית הפרויקט לשמירת הגיבויים
+    if(!dir){
+      try{dir=await window.showDirectoryPicker({id:"carmin-backup",mode:"readwrite"});}
+      catch(e){ if(e&&e.name==="AbortError")return; dir=null; } // ביטול = לא לגבות בכלל
+      if(dir){ if(await ensureDirPerm(dir))await saveBackupDir(dir); else dir=null; }
+    }
+    if(dir&&await ensureDirPerm(dir)){
+      try{await writeBackupToDir(dir,json);flash();return;}
+      catch(e){/* התיקייה אינה זמינה יותר — נפילה חיננית להורדה */}
+    }
+  }
+  // דפדפן ללא תמיכה (מובייל/ספארי/פיירפוקס) — הורדה רגילה לתיקיית ההורדות
+  downloadBackup(json);
+}
+// הגדרה/שינוי של תיקיית הגיבוי הקבועה
+async function chooseBackupFolder(){
+  if(!window.showDirectoryPicker){alert("בחירת תיקיית גיבוי קבועה נתמכת ב-Chrome/Edge במחשב. בדפדפן זה הגיבוי יורד לתיקיית ההורדות.");return;}
+  const existing=await getSavedBackupDir();
+  if(existing&&!confirm('תיקיית גיבוי כבר מוגדרת ("'+existing.name+'").\nלבחור תיקייה אחרת?'))return;
+  try{
+    const dir=await window.showDirectoryPicker({id:"carmin-backup",mode:"readwrite"});
+    if(await ensureDirPerm(dir)){await saveBackupDir(dir);alert('תיקיית הגיבוי הוגדרה: "'+dir.name+'".\nמעכשיו כפתור "גיבוי" ישמור לשם אוטומטית.');}
+    else alert("לא ניתנה הרשאת כתיבה לתיקייה.");
+  }catch(e){ if(!e||e.name!=="AbortError")alert("לא ניתן היה להגדיר את התיקייה."); }
 }
 
 // ---------- שיתוף ----------
