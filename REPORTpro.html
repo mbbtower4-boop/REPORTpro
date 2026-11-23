@@ -28,10 +28,8 @@
   header{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05)}
   .h-inner{max-width:920px;margin:0 auto;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
   .brand{display:flex;align-items:center;gap:10px;background:none;border:none;padding:0}
-  .tri{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#dc2626,#b91c1c);display:flex;align-items:center;justify-content:center}
   .brand-name{font-family:var(--font-head);font-weight:800;font-size:16px;line-height:1.2;text-align:right;color:var(--ink)}
   .brand-sub-inline{font-weight:600;font-size:13px;color:var(--muted)}
-  .brand-sub{font-size:11px;color:var(--muted);text-align:right}
   .h-right{display:flex;align-items:center;gap:8px}
   .link-btn{display:flex;align-items:center;gap:6px;background:#f1f5f9;border:1px solid var(--line);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;color:#334155}
   .flash{display:none;align-items:center;gap:4px;color:#16a34a;font-size:13px;font-weight:700;background:#f0fdf4;padding:5px 10px;border-radius:8px}
@@ -76,8 +74,6 @@
   .card-selected .card-title{color:var(--blue)}
   .card-check{position:absolute;top:10px;inset-inline-end:10px;z-index:2;width:30px;height:30px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(29,78,216,.4)}
   .card-check svg{width:18px;height:18px}
-  .sel-badge{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:800;color:#fff;background:var(--blue);padding:2px 8px;border-radius:20px;vertical-align:middle}
-  .sel-badge svg{width:12px;height:12px}
   .card-accent{width:5px;background:var(--blue)}
   .card-body{padding:16px 18px;flex:1;min-width:0}
   .card-title{font-family:var(--font-head);font-weight:700;font-size:15.5px;line-height:1.3;margin-bottom:8px}
@@ -141,7 +137,6 @@
   .img-order button:disabled{opacity:.35;cursor:default}
   .img-ph{height:110px;border-radius:10px;border:1.5px dashed #cbd5e1;display:flex;align-items:center;justify-content:center;background:#f8fafc;color:#cbd5e1;font-size:12px}
   .img-btns{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-  .img-btn{flex:1 1 calc(50% - 3px)}
   .img-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11.5px;font-weight:600;padding:6px 4px;border:1px solid var(--line);border-radius:7px;background:#fff;color:#334155}
   .defect-body{flex:1;min-width:0}
   .tags-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -273,8 +268,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.35.0";
+const APP_VERSION="1.36.0";
 const CHANGELOG=[
+  {v:"1.36.0",d:"ייצוא PDF חדש: כל עמוד מצויר בנפרד ברזולוציה גבוהה (~300 DPI) — חד יותר בהדפסה ועובד גם בדוחות ארוכים באייפון; הסיכום, החתימה ושורת התחתית נשארים תמיד יחד (החתימה לא 'נתקעת' לבד בעמוד האחרון), וללא שאריות קווי מסגרת בין עמודים. דוח חדש ממשיך מהדוח המסומן (או האחרון בתיקייה): פרטי הדוח, שמות האזורים והסיכום מולאו מראש. ניקוי קוד ותיקונים קטנים"},
   {v:"1.35.0",d:"שיפור מהירות משמעותי בדוחות עם הרבה תמונות (בעיקר בטלפון): שמירה מהירה פי 4, לחיצה על חומרה/תמונה מרעננת רק את הליקוי ולא את כל המסך, בדיקת שינויים בזמן הקלדה כמעט ללא עלות, וחיסכון בזיכרון (הנתונים לא מוחזקים פעמיים). הוספת תמונה תוך כדי הקלדה לא מוציאה מתיבת הטקסט"},
   {v:"1.34.0",d:"הגנה על הנתונים ועבודה בשטח: האפליקציה נפתחת ומפיקה PDF גם בלי חיבור לאינטרנט; בקשה מהדפדפן לשמור את הנתונים לצמיתות; חיווי 'גיבוי אחרון' בעמוד הבית ואזהרה כשיש דוחות שלא גובו יותר מיומיים (במקום תזכורת הקופצת); הנחיה באייפון להוספה למסך הבית; ואישור לפני מחיקת אזור/ליקוי שיש בו תוכן"},
   {v:"1.33.1",d:"תיקון: פתיחת דוח לצפייה כבר לא מסמנת אותו כ'עודכן עכשיו' — שמירה מתבצעת רק כשהתוכן באמת השתנה. כך שחזור מגיבוי מהטלפון לא ידלג בטעות על שינויים, ולחיצה על 'דוח חדש' בלי להקליד לא יוצרת דוח ריק"},
@@ -386,7 +382,11 @@ function thumbURL(src){
   }catch(e){return src;}
   _thumbs.set(fp,u);return u;
 }
-function releaseThumbs(){for(const u of _thumbs.values())URL.revokeObjectURL(u);_thumbs.clear();}
+function releaseThumbs(){
+  // שחרור מושהה: תמונות שעדיין נטענות במסך שנסגר עכשיו יסיימו לפני שהכתובת מבוטלת (מונע שגיאות טעינה)
+  const urls=[..._thumbs.values()];_thumbs.clear();
+  if(urls.length)setTimeout(()=>urls.forEach(u=>URL.revokeObjectURL(u)),5000);
+}
 function nowStamp(){
   const d=new Date(),p=n=>String(n).padStart(2,"0");
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -419,11 +419,11 @@ function blankReport(){
     id:uid(),createdAt:Date.now(),updatedAt:Date.now(),
     folderId:(state.activeFolderId&&state.activeFolderId!=="__none")?state.activeFolderId:null,
     templateId:tpl.id,
-    title:"פיקוח עליון קו כחול - מקטע 3 - לילה",
+    title:"",
     date:new Date().toISOString().slice(0,10),
-    location:"",stage:"שלב מס' 1",editor:tpl.engineerName||"",
+    location:"",stage:"",editor:tpl.engineerName||"",
     distributionSuggestions:"",
-    generalNotes:"",planNumber:"KAR-TR-BL-TEMPRH03-DD-301-",
+    generalNotes:"",planNumber:"",
     revision:"01",revisionDate:new Date().toISOString().slice(0,10),
     imageFit:"contain",
     zones:[blankZone()],
@@ -549,9 +549,9 @@ function showNoStoreBanner(){
   b.querySelector("button").onclick=()=>b.remove();
   document.body.appendChild(b);
 }
-function go(view){ if(state.view==="edit"&&view!=="edit"&&state.current){autosaveNow();} if(view==="home"||view==="templates")releaseThumbs(); state.view=view;render();window.scrollTo(0,0);}
+function go(view){ if(state.view==="edit"&&view!=="edit"&&state.current){autosaveNow();} if(view==="home"||view==="templates"){releaseThumbs();newReportBase=null;} state.view=view;render();window.scrollTo(0,0);}
 function flash(){const f=document.getElementById("flash");f.classList.add("show");setTimeout(()=>f.classList.remove("show"),1600);}
-function tplOf(id){return state.templates.find(t=>t.id===id)||state.templates[0]||defaultTemplate();}
+function tplOf(id){return state.templates.find(t=>t.id===id)||getDefaultTemplate();}
 function folderOf(id){return state.folders.find(f=>f.id===id);}
 
 // ---------- RENDER ROUTER ----------
@@ -614,7 +614,7 @@ function homeHTML(){
   return `
   <div class="list-top">
     <div><h1 class="page-title">${activeFolder?esc(activeFolder.name):"ארכיון דוחות"}</h1>
-    <p class="page-sub">${list.length} דוחות${activeFolder?" בתיקייה":""} · לחצו על כרטיס כדי לסמן את הדוח הפעיל</p></div>
+    <p class="page-sub">${list.length} דוחות${activeFolder?" בתיקייה":""} · סמנו דוח בלחיצה — "דוח חדש" ימשיך ממנו</p></div>
     <button class="btn-primary" onclick="newReport()">${I.plus} דוח חדש</button>
   </div>
   ${chips}
@@ -683,7 +683,7 @@ function archiveCardHTML(r){
   return `<div class="card${sel?' card-selected':''}" onclick="selectReport('${r.id}')">
       ${sel?`<div class="card-check">${I.check}</div>`:""}
       <div class="card-accent" style="background:${tpl.primaryColor}"></div><div class="card-body">
-      <div class="card-title">${esc(r.title)}</div>
+      <div class="card-title">${esc(r.title)||'<span style="color:#94a3b8">(ללא כותרת)</span>'}</div>
       <div class="card-meta"><span>${I.cal} ${esc(r.date)}</span>${r.location?`<span>${I.pin} ${esc(r.location)}</span>`:""}</div>
       <div class="card-tpl"><span class="sw" style="background:${tpl.primaryColor}"></span>${esc(tpl.company)}</div>
       <div class="pills"><span class="pill">${r.zones.length} אזורים</span><span class="pill">${dc} ליקויים</span>${hc>0?`<span class="pill high">${hc} חמורים</span>`:""}</div>
@@ -738,10 +738,30 @@ async function moveToFolder(rid,fid){
 }
 
 function selectReport(id){state.selectedReportId=(state.selectedReportId===id?null:id);render();}
-function newReport(){state.current=blankReport();markClean(true);state.selectedReportId=state.current.id;go("edit");}
-function editReport(id){state.current=deepClone(state.reports.find(r=>r.id===id));markClean();state.selectedReportId=id;go("edit");}
+// דוח חדש ממשיך את הקודם: מבוסס על הדוח המסומן בארכיון, ואם אין — על האחרון שעודכן בתיקייה הנוכחית.
+// מועתקים פרטי הדוח, שמות האזורים והסיכום; הליקויים והתמונות מתחילים ריקים, והתאריך = היום.
+let newReportBase=null;
+function newReport(){
+  const r=blankReport();
+  const fid=r.folderId;
+  const prev=state.reports.find(x=>x.id===state.selectedReportId)||
+    state.reports.filter(x=>fid?x.folderId===fid:true).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+  newReportBase=null;
+  if(prev){
+    for(const k of ["title","location","stage","editor","distributionSuggestions","planNumber","revision","revisionDate","generalNotes","imageFit","summary","engineerName","engineerTitle","engineerLicense"])
+      if(prev[k]!=null)r[k]=prev[k];
+    if(state.templates.some(t=>t.id===prev.templateId))r.templateId=prev.templateId;
+    if(!fid&&prev.folderId)r.folderId=prev.folderId;
+    const titled=(prev.zones||[]).filter(z=>(z.title||"").trim());
+    if(titled.length)r.zones=titled.map(z=>Object.assign(blankZone(),{title:z.title}));
+    newReportBase=prev.title||"ללא כותרת";
+  }
+  state.current=r;markClean(true);state.selectedReportId=r.id;go("edit");
+}
+function dismissBaseNote(){newReportBase=null;const n=document.getElementById("baseNote");if(n)n.remove();}
+function editReport(id){newReportBase=null;state.current=deepClone(state.reports.find(r=>r.id===id));markClean();state.selectedReportId=id;go("edit");}
 function printReport(id){state.current=deepClone(state.reports.find(r=>r.id===id));markClean();state.selectedReportId=id;go("print");}
-async function dupReport(id){const c=deepClone(state.reports.find(r=>r.id===id));c.id=uid();c.createdAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
+async function dupReport(id){const c=deepClone(state.reports.find(r=>r.id===id));c.id=uid();c.createdAt=c.updatedAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
 async function delReport(id){if(!confirm("למחוק את הדוח?"))return;await DB.del("reports",id);state.reports=state.reports.filter(r=>r.id!==id);render();}
 
 async function persist(){
@@ -818,6 +838,7 @@ function editHTML(){
   const folderOpts=`<option value="">ללא תיקייה</option>`+state.folders.map(f=>`<option value="${f.id}" ${r.folderId===f.id?"selected":""}>${esc(f.name)}</option>`).join("");
   return `
   <div style="padding-bottom:20px">
+    ${newReportBase?`<div class="notice notice-tip" id="baseNote"><span>📋 הדוח מולא מראש מתוך <b>"${esc(newReportBase)}"</b> — פרטי הדוח, האזורים והסיכום. הליקויים ריקים והתאריך הוא היום.</span><button class="notice-x" onclick="dismissBaseNote()" title="סגור">✕</button></div>`:""}
     <div class="section">
       <div class="sec-head"><span class="sec-icon">${I.palette}</span><h2 class="sec-title">תבנית ושיוך</h2></div>
       <div class="field-grid">
@@ -835,7 +856,7 @@ function editHTML(){
     <div class="section">
       <div class="sec-head"><span class="sec-icon">${I.file}</span><h2 class="sec-title">פרטי הדוח</h2></div>
       <div class="field-grid">
-        <div class="full"><label class="lbl">כותרת הדוח</label><input class="input" data-f="title" value="${esc(r.title)}"></div>
+        <div class="full"><label class="lbl">כותרת הדוח</label><input class="input" data-f="title" value="${esc(r.title)}" placeholder="לדוגמה: פיקוח עליון קו חום - מקטע 5 - שלב ביצוע מס' 2"></div>
         <div><label class="lbl">${I.cal} תאריך</label><input class="input" type="date" data-f="date" value="${esc(r.date)}"></div>
         <div><label class="lbl">שלב ביצוע</label><input class="input" data-f="stage" value="${esc(r.stage)}"></div>
         <div class="full"><label class="lbl">${I.pin} מיקום</label><input class="input" data-f="location" value="${esc(r.location)}" placeholder="רחוב הרצל / שד' הקיבוצים / משה מזרחי"></div>
@@ -1243,7 +1264,7 @@ function templatesHTML(){
     <div class="tpl-card">
       <div class="tpl-preview" style="border-bottom-color:${t.primaryColor}">
         <div class="tpl-logo" style="background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">
-          ${t.logo?`<img src="${t.logo}">`:`<span style="color:#fff">${I.triBig}</span>`}
+          ${t.logo?`<img src="${esc(t.logo)}">`:`<span style="color:#fff">${I.triBig}</span>`}
         </div>
         <div><div class="tpl-company" style="color:${t.accentColor}">${esc(t.company)}</div><div class="tpl-sub">${escMulti(t.companySub)}</div></div>
       </div>
@@ -1296,7 +1317,7 @@ function templateEditHTML(){
         <div><label class="lbl">צבע מותג (לוגו ושם)</label><div class="color-field"><input type="color" data-t="accentColor" value="${t.accentColor}"><input class="input" data-t="accentColor" value="${t.accentColor}" style="max-width:120px"></div></div>
         <div class="full"><label class="lbl">לוגו (אופציונלי)</label>
           <div class="logo-upload">
-            <div class="logo-prev" id="logoPrev" ondragover="event.preventDefault();this.style.outline='2px dashed var(--blue)'" ondragleave="this.style.outline='none'" ondrop="this.style.outline='none';dropLogo(event)">${t.logo?`<img src="${t.logo}">`:I.imgBig}</div>
+            <div class="logo-prev" id="logoPrev" ondragover="event.preventDefault();this.style.outline='2px dashed var(--blue)'" ondragleave="this.style.outline='none'" ondrop="this.style.outline='none';dropLogo(event)">${t.logo?`<img src="${esc(t.logo)}">`:I.imgBig}</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="btn-ghost-sm" onclick="document.getElementById('logoInput').click()">${I.upload} העלה לוגו</button>
               <button class="btn-ghost-sm" onclick="pasteLogo()">${I.paste} הדבק לוגו</button>
@@ -1327,7 +1348,7 @@ function templateEditHTML(){
         <div><label class="lbl">מספר רישיון</label><input class="input" data-t="engineerLicense" value="${esc(t.engineerLicense)}"></div>
         <div class="full"><label class="lbl">חתימה / חותמת סרוקה (אופציונלי)</label>
           <div class="logo-upload">
-            <div class="logo-prev" style="width:130px;height:64px">${t.signature?`<img src="${t.signature}">`:I.edit}</div>
+            <div class="logo-prev" style="width:130px;height:64px">${t.signature?`<img src="${esc(t.signature)}">`:I.edit}</div>
             <div style="display:flex;flex-direction:column;gap:6px">
               <button class="btn-ghost-sm" onclick="document.getElementById('sigInput').click()">${I.upload} העלה חתימה</button>
               ${t.signature?`<button class="btn-ghost-sm" style="color:#dc2626" onclick="clearSignature()">${I.x} הסר</button>`:""}
@@ -1365,11 +1386,11 @@ function templateEditHTML(){
       <div class="sec-head"><span class="sec-icon">${I.file}</span><h2 class="sec-title">תצוגה מקדימה</h2></div>
       <div class="doc-header" id="prevHeader" style="--blue:${t.primaryColor}">
         <div class="doc-logo" style="${logoLayoutStyle(t.logoPosition)}">
-          <span class="doc-tri" id="prevLogo" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${t.logo}">`:I.triBig}</span>
+          <span class="doc-tri" id="prevLogo" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${esc(t.logo)}">`:I.triBig}</span>
           <div><div class="doc-company" id="prevCompany" style="color:${t.accentColor}">${esc(t.company)}</div><div class="doc-company-sub" id="prevSub">${escMulti(t.companySub)}</div></div>
         </div>
       </div>
-      ${t.signature?`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">חתימה:</div><img id="prevSig" src="${t.signature}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain"></div>`:""}
+      ${t.signature?`<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)"><div style="font-size:12px;color:var(--muted);margin-bottom:6px">חתימה:</div><img id="prevSig" src="${esc(t.signature)}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain"></div>`:""}
     </div>
   </div>
   <div class="action-bar"><div class="action-bar-inner">
@@ -1482,7 +1503,7 @@ function printHTML(){
   </div>
   <div class="print-doc" id="printDoc" style="--blue:${t.primaryColor}">
     <div class="doc-header"><div class="doc-logo" style="${logoLayoutStyle(t.logoPosition)}">
-      <span class="doc-tri" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${t.logo}">`:I.triBig}</span>
+      <span class="doc-tri" style="width:${t.logoSize||74}px;height:${t.logoSize||74}px;background:${t.logo?'#fff':`linear-gradient(135deg,${t.accentColor},${t.accentColor})`}">${t.logo?`<img src="${esc(t.logo)}">`:I.triBig}</span>
       <div><div class="doc-company" style="color:${t.accentColor}">${esc(t.company)}</div><div class="doc-company-sub">${escMulti(t.companySub)}</div></div></div></div>
     <div class="doc-title-box"><h1 class="doc-title">${esc(r.title)}</h1></div>
     ${(t.clientName||t.clientContact||t.clientAddress||t.clientPhone||t.clientEmail)?`
@@ -1505,7 +1526,7 @@ function printHTML(){
     </div>
     <div class="doc-signwrap">
       <div class="doc-sign">
-        ${t.signature?`<img src="${t.signature}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain;margin-bottom:6px">`:""}
+        ${t.signature?`<img src="${esc(t.signature)}" style="max-height:${t.signatureSize||70}px;max-width:240px;object-fit:contain;margin-bottom:6px">`:""}
         <div class="doc-sign-name">${esc(r.engineerName)}</div>
         <div class="doc-sign-line">${esc(r.engineerTitle)}</div>
         <div class="doc-sign-line">${esc(r.engineerLicense)}</div>
@@ -1802,74 +1823,65 @@ async function exportPDF(){
     return;
   }
   const prevWidth=doc.style.width;
-  const foot=doc.querySelector(".doc-footer");
-  const prevFootDisplay=foot?foot.style.display:"";
   try{
     showBusyOverlay("מפיק PDF…");
     try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
     // רוחב קבוע לרינדור עקבי של ה-PDF ללא תלות ברוחב המסך/המכשיר (מונע פריסת מובייל ועמודים שגויים)
     doc.style.width="760px";
-    const scale=doc.scrollHeight*2>30000?Math.max(1,Math.floor(30000/doc.scrollHeight)):2;
     const pdf=new jsPDFctor({unit:"pt",format:"a4",orientation:"portrait"});
     const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
     const margin=28,contentW=pageW-margin*2;
-    const ptPerCss=contentW/doc.getBoundingClientRect().width;
-    // שורת התחתית ("כל הזכויות שמורות / הופק בתאריך") מצולמת בנפרד ומודבקת מתחת לתוכן בעמוד האחרון.
-    // לכן היא לעולם לא נדחקת לבדה לעמוד נוסף ריק; בכל עמוד נשמר עבורה מקום בתחתית.
-    let footImg=null,footW=0,footH=0,footX=margin,footGap=0;
-    if(foot){
-      const dr=doc.getBoundingClientRect(),fr=foot.getBoundingClientRect();
-      const fc=await h2c(foot,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900});
-      footImg=fc.toDataURL("image/jpeg",0.9);
-      footW=fr.width*ptPerCss;footH=fr.height*ptPerCss;footX=margin+(fr.left-dr.left)*ptPerCss;
-      footGap=(parseFloat(getComputedStyle(foot).marginTop)||16)*ptPerCss;
-      foot.style.display="none";
+    const dr=doc.getBoundingClientRect();
+    const ptPerCss=contentW/dr.width;
+    const cap=(pageH-margin*2)/ptPerCss; // גובה תוכן של עמוד A4, בפיקסלי CSS
+    const rel=el=>{const r=el.getBoundingClientRect();return {t:r.top-dr.top,b:r.bottom-dr.top};};
+    // סוף התוכן האמיתי (בלי הריווח הפנימי בתחתית — כדי שלא ייווצר "פירור" של עמוד ריק)
+    let contentBottom=0;[...doc.children].forEach(el=>{contentBottom=Math.max(contentBottom,rel(el).b);});
+    // נקודות חיתוך מותרות: מתחת לכל בלוק (+2px כדי שקו מסגרת לא ייחתך ויגלוש לעמוד הבא)
+    const bounds=[...doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect")].map(el=>rel(el).b+2).sort((a,b)=>a-b);
+    // כל אזור (מלבד הראשון) מתחיל בעמוד חדש
+    // (חיתוך 3px מעל ראש הבלוק — כדי שקו המסגרת העליון שלו לא ישאיר "שארית" בתחתית העמוד הקודם)
+    const forced=[...doc.querySelectorAll(".doc-zone.zone-break")].map(el=>rel(el).t-3).sort((a,b)=>a-b);
+    // "בלוק הסיום" — סיכום + חתימה + שורת התחתית — נשאר תמיד יחד באותו עמוד
+    const summaryEl=doc.querySelector(".doc-summary");
+    const closingTop=summaryEl?rel(summaryEl).t-3:contentBottom;
+    // 1) קביעת העמודים מראש (בלי לצייר כלום)
+    const pages=[];let start=0;
+    while(start<contentBottom-1){
+      let end=Math.min(start+cap,contentBottom);
+      const fb=forced.find(f=>f>start+36&&f<=end);
+      if(fb!==undefined)end=fb;
+      else if(end<contentBottom){
+        if(closingTop>start+20&&closingTop<end)end=closingTop; // בלוק הסיום לא נכנס כולו → עובר לעמוד הבא בשלמותו
+        else{let cut=-1;for(const b of bounds){if(b>start+20&&b<=end)cut=b;}if(cut>0)end=cut;}
+      }
+      pages.push([start,end]);start=end;
     }
-    const canvas=await h2c(doc,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900,windowHeight:Math.max(doc.scrollHeight+120,1200)});
-    const pxPerPt=canvas.width/contentW;
-    const pageContentHpx=(pageH-margin*2-(footImg?footH+footGap:0))*pxPerPt;
-    // נקודות חיתוך מועדפות: תחתית כל בלוק, כדי לא לחתוך ליקוי/תמונה באמצע העמוד
-    const base=doc.getBoundingClientRect().top;
-    // חיתוך התחתית בסוף התוכן האמיתי — כדי שריווח פנימי בתחתית לא ייצור "פירור" של עמוד ריק
-    let contentBottom=0;
-    [...doc.children].forEach(el=>{if(getComputedStyle(el).display!=="none")contentBottom=Math.max(contentBottom,el.getBoundingClientRect().bottom-base);});
-    const bounds=[];
-    doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect,.doc-summary,.doc-signwrap").forEach(el=>{bounds.push((el.getBoundingClientRect().bottom-base)*scale);});
-    bounds.sort((a,b)=>a-b);
-    // שבירות עמוד כפויות: תחילת כל אזור חדש (מלבד הראשון) — כדי שכל אזור יתחיל בעמוד נפרד
-    const forced=[];
-    doc.querySelectorAll(".doc-zone.zone-break").forEach(el=>{forced.push((el.getBoundingClientRect().top-base)*scale);});
-    forced.sort((a,b)=>a-b);
-    const pc=document.createElement("canvas"),ctx=pc.getContext("2d");
-    let startPx=0,first=true,lastSliceH=0;
-    const total=contentBottom>0?Math.min(canvas.height,Math.ceil((contentBottom+6)*scale)):canvas.height;
-    while(startPx<total-1){
-      let endPx=Math.min(startPx+pageContentHpx,total);
-      // שבירה כפויה לפני אזור חדש קודמת לחיתוך המועדף.
-      // סף (brkGuard) מונע עמוד "פירור" ריק כשאזור מתחיל ממש בראש העמוד הנוכחי.
-      let forcedCut=-1;
-      const brkGuard=36*scale;
-      for(const fb of forced){if(fb>startPx+brkGuard&&fb<=endPx){forcedCut=fb;break;}}
-      if(forcedCut>0)endPx=forcedCut;
-      else if(endPx<total){let cut=-1;for(const b of bounds){if(b>startPx+20&&b<=endPx)cut=b;}if(cut>startPx+20)endPx=cut;}
-      const sliceH=Math.max(1,Math.round(endPx-startPx));
-      pc.width=canvas.width;pc.height=sliceH;
-      ctx.fillStyle="#fff";ctx.fillRect(0,0,pc.width,sliceH);
-      ctx.drawImage(canvas,0,startPx,canvas.width,sliceH,0,0,canvas.width,sliceH);
-      if(!first)pdf.addPage();first=false;
-      pdf.addImage(pc.toDataURL("image/jpeg",0.82),"JPEG",margin,margin,contentW,sliceH/pxPerPt,undefined,"FAST");
-      lastSliceH=sliceH;
-      startPx=endPx;
+    // 2) ציור כל עמוד בנפרד ברזולוציה גבוהה (~300 DPI) — חד בהדפסה,
+    //    ובלי תמונת-ענק אחת (שבאייפון נכשלת מעל ~16 מגה-פיקסל בדוחות ארוכים)
+    // כל עמוד: עותק של הדוח בתוך "חלון" בגובה העמוד בדיוק (overflow:hidden), מוזז למעלה לתחילת העמוד —
+    // ומצלמים רק את החלון. מה שנראה בחלון = מה שנכנס לעמוד.
+    const W=Math.round(dr.width);
+    for(let i=0;i<pages.length;i++){
+      const [s,e]=pages[i],h=Math.ceil(e-s);
+      if(pages.length>1)showBusyOverlay("מפיק PDF… עמוד "+(i+1)+" מתוך "+pages.length);
+      const frame=document.createElement("div");
+      frame.style.cssText=`position:absolute;left:${-(W+200)}px;top:${window.scrollY}px;width:${W}px;height:${h}px;overflow:hidden;background:#fff;direction:rtl`;
+      const copy=doc.cloneNode(true);copy.removeAttribute("id");
+      copy.style.cssText+=`;width:${W}px;max-width:none;margin:${-s}px 0 0 0;box-shadow:none;border-radius:0`;
+      frame.appendChild(copy);document.body.appendChild(frame);
+      try{
+        await Promise.all([...copy.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r;})));
+        const c=await h2c(frame,{scale:3,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900});
+        if(i)pdf.addPage();
+        pdf.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",margin,margin,contentW,h*ptPerCss,undefined,"FAST");
+      }finally{frame.remove();}
     }
-    // שורת התחתית — מיד מתחת לתוכן בעמוד האחרון (המקום עבורה שמור מראש, כך שאין עמוד נוסף)
-    if(footImg)pdf.addImage(footImg,"JPEG",footX,margin+lastSliceH/pxPerPt+footGap,footW,footH,undefined,"FAST");
-    if(foot)foot.style.display=prevFootDisplay;
     doc.style.width=prevWidth;
     const blob=pdf.output("blob");
     hideBusyOverlay();
     await saveBlob(blob,safeName(state.current.title+" "+(state.current.date||""))+".pdf","application/pdf",".pdf");
   }catch(err){
-    if(foot)foot.style.display=prevFootDisplay;
     doc.style.width=prevWidth;
     hideBusyOverlay();
     if(confirm("אירעה שגיאה בהפקת ה-PDF. לפתוח את חלון ההדפסה של הדפדפן במקום?"))window.print();
