@@ -48,6 +48,12 @@
   .btn-primary{display:inline-flex;align-items:center;gap:7px;background:var(--blue);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:700;box-shadow:0 2px 8px rgba(29,78,216,.25)}
   .btn-ghost-sm{display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13.5px;font-weight:700;color:#334155}
   .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .backup-ok{font-size:12.5px;color:#166534;margin:-6px 0 14px;display:flex;align-items:center;gap:5px;font-weight:600}
+  .backup-ok svg{width:14px;height:14px}
+  .notice{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-radius:12px;margin-bottom:14px;font-size:13.5px;font-weight:600;line-height:1.5}
+  .notice-warn{background:#fffbeb;border:1.5px solid #fde68a;color:#92400e}
+  .notice-tip{background:#eff6ff;border:1.5px solid #bfdbfe;color:#1e3a8a}
+  .notice-x{background:none;border:none;color:inherit;font-size:16px;font-weight:800;padding:0 4px}
   .search-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
   .search-input{flex:1;min-width:180px;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;background:#fff;color:var(--ink);outline:none}
   .search-input:focus{border-color:var(--blue)}
@@ -267,8 +273,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.33.1";
+const APP_VERSION="1.34.0";
 const CHANGELOG=[
+  {v:"1.34.0",d:"הגנה על הנתונים ועבודה בשטח: האפליקציה נפתחת ומפיקה PDF גם בלי חיבור לאינטרנט; בקשה מהדפדפן לשמור את הנתונים לצמיתות; חיווי 'גיבוי אחרון' בעמוד הבית ואזהרה כשיש דוחות שלא גובו יותר מיומיים (במקום תזכורת הקופצת); הנחיה באייפון להוספה למסך הבית; ואישור לפני מחיקת אזור/ליקוי שיש בו תוכן"},
   {v:"1.33.1",d:"תיקון: פתיחת דוח לצפייה כבר לא מסמנת אותו כ'עודכן עכשיו' — שמירה מתבצעת רק כשהתוכן באמת השתנה. כך שחזור מגיבוי מהטלפון לא ידלג בטעות על שינויים, ולחיצה על 'דוח חדש' בלי להקליד לא יוצרת דוח ריק"},
   {v:"1.33.0",d:"שחזור מגיבוי מייבא רק דוחות (ותיקיות חסרות) — התבניות במכשיר נשארות קבועות ולא נדרסות; דוח קיים מתעדכן רק אם הגרסה בגיבוי חדשה יותר. ייצוא PDF: שורת התחתית כבר לא יוצרת עמוד נוסף ריק בסוף הדוח"},
   {v:"1.32.0",d:"כל אזור בייצוא הדוח מתחיל בעמוד נפרד — אזור חדש לא מתחיל באמצע עמוד יחד עם אזור קודם (חל גם בהדפסה וגם בייצוא PDF הישיר)"},
@@ -494,6 +501,10 @@ async function init(){
   state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
   render();
   if(DB.broken)showNoStoreBanner();
+  // בקשה מהדפדפן לשמור את הנתונים לצמיתות (מונע מחיקה אוטומטית כשהמכשיר צריך מקום / אחרי תקופה בלי שימוש)
+  try{if(navigator.storage&&navigator.storage.persist&&!(await navigator.storage.persisted()))await navigator.storage.persist();}catch(e){}
+  // מצב לא מקוון: רישום Service Worker (רק כשהאפליקציה מוגשת מאתר — לא מקובץ מקומי)
+  if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register("sw.js").catch(()=>{});
 }
 let noStoreBannerShown=false;
 function showNoStoreBanner(){
@@ -574,9 +585,36 @@ function homeHTML(){
   </div>
   ${chips}
   ${folderBar}
+  ${backupStatusHTML()}
   ${searchRow}
   <div id="archiveGrid">${archiveGridHTML(filteredSortedReports())}</div>
   <div style="text-align:center;color:#94a3b8;font-size:12px;margin-top:28px">REPORTpro · גרסה ${APP_VERSION}</div>`;
+}
+// ----- מצב גיבוי + הגנה על הנתונים (מוצג בעמוד הבית) -----
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function markBackedUp(){lsSet("rp_lastBackupAt",String(Date.now()));if(state.view==="home")render();}
+const IS_IOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const IS_STANDALONE=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone===true;
+function dismissIosTip(){lsSet("rp_iosTipDismissed","1");render();}
+function backupStatusHTML(){
+  let html="";
+  // אייפון מחוץ למסך הבית: ספארי עלול למחוק את הנתונים אחרי ~7 ימים ללא שימוש
+  if(IS_IOS&&!IS_STANDALONE&&!lsGet("rp_iosTipDismissed")){
+    html+=`<div class="notice notice-tip"><span>📱 <b>באייפון — הוסיפו את האפליקציה למסך הבית</b> (שתף ← "הוספה למסך הבית"). כך הדוחות נשמרים לצמיתות; בדפדפן רגיל ספארי עלול למחוק אותם אחרי כשבוע בלי שימוש.</span><button class="notice-x" onclick="dismissIosTip()" title="סגור">✕</button></div>`;
+  }
+  if(!state.reports.length)return html;
+  const last=parseInt(lsGet("rp_lastBackupAt")||"0",10);
+  const changed=state.reports.filter(r=>(r.updatedAt||0)>last).length;
+  const days=last?Math.floor((Date.now()-last)/86400000):0;
+  const when=!last?"טרם בוצע גיבוי במכשיר זה":days===0?"גיבוי אחרון: היום":days===1?"גיבוי אחרון: אתמול":"גיבוי אחרון: לפני "+days+" ימים";
+  // אזהרה רק כשיש שינויים שלא גובו וגם עברו יותר מיומיים (או שמעולם לא גובה)
+  if(changed>0&&(!last||Date.now()-last>2*86400000)){
+    html+=`<div class="notice notice-warn"><span>⚠️ <b>${changed===1?"דוח אחד":changed+" דוחות"}</b> לא גובו · ${when}. מומלץ לגבות כדי לא לאבד עבודה.</span><button class="btn-ghost-sm" onclick="exportData()">${I.download} גבה עכשיו</button></div>`;
+  }else{
+    html+=`<div class="backup-ok">${I.check} ${when}${changed?` · ${changed===1?"דוח אחד שונה":changed+" דוחות שונו"} מאז`:""}</div>`;
+  }
+  return html;
 }
 function filteredSortedReports(){
   const fid=state.activeFolderId;
@@ -674,19 +712,9 @@ async function delReport(id){if(!confirm("למחוק את הדוח?"))return;awa
 
 async function persist(){
   await autosaveNow(); // שומר רק אם יש שינוי (מעדכן גם את חיווי השמירה)
-  maybeRemindBackup();
   flash();
 }
-// תזכורת גיבוי אחרי כמה שמירות (רשת ביטחון בשטח)
-function maybeRemindBackup(){
-  try{
-    let n=parseInt(sessionStorage.getItem("saveCount")||"0",10)+1;
-    sessionStorage.setItem("saveCount",String(n));
-    if(n%5===0){
-      setTimeout(()=>{ if(confirm("שמרת כמה דוחות. מומלץ לגבות עכשיו לקובץ כדי לא לאבד נתונים. לגבות?")) exportData(); },300);
-    }
-  }catch(e){}
-}
+// (תזכורת הגיבוי עברה לבאנר מבוסס-זמן בעמוד הבית — ראו backupStatusHTML)
 
 // ----- שמירה אוטומטית (מונעת אובדן עבודה) -----
 let autosaveTimer=null;
@@ -875,10 +903,29 @@ function bindEdit(){
 }
 function findZone(zid){return state.current.zones.find(z=>z.id===zid);}
 function addZone(){state.current.zones.push(blankZone());render();}
-function delZone(zid){state.current.zones=state.current.zones.filter(z=>z.id!==zid);if(!state.current.zones.length)state.current.zones.push(blankZone());render();}
+// מחיקה עם אישור — רק כשיש תוכן שיאבד (תיאור/תמונות/כותרת), כדי שלחיצה בטעות לא תמחק עבודה
+const defectHasContent=d=>!!((d.description||"").trim()||defectImages(d).length||d.severity||d.category);
+function delZone(zid){
+  const z=findZone(zid);if(!z)return;
+  const filled=z.defects.filter(defectHasContent).length;
+  const photos=z.defects.reduce((s,d)=>s+defectImages(d).length,0);
+  if(filled||(z.title||"").trim()){
+    const name=(z.title||"").trim()?'"'+z.title.trim()+'"':"זה";
+    const parts=[filled?(filled===1?"ליקוי אחד":filled+" ליקויים"):"",photos?(photos===1?"תמונה אחת":photos+" תמונות"):""].filter(Boolean).join(" ו");
+    if(!confirm("למחוק את האזור "+name+(parts?" כולל "+parts:"")+"?\nלא ניתן לבטל פעולה זו."))return;
+  }
+  state.current.zones=state.current.zones.filter(z=>z.id!==zid);if(!state.current.zones.length)state.current.zones.push(blankZone());render();
+}
 function moveZone(i,dir){const a=state.current.zones,j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();}
 function addDefect(zid){findZone(zid).defects.push(blankDefect());render();}
-function delDefect(zid,did){const z=findZone(zid);z.defects=z.defects.filter(d=>d.id!==did);render();}
+function delDefect(zid,did){
+  const z=findZone(zid);const d=z&&z.defects.find(x=>x.id===did);if(!d)return;
+  if(defectHasContent(d)){
+    const n=defectImages(d).length;
+    if(!confirm("למחוק את הליקוי"+(n?" ואת "+(n===1?"התמונה שלו":n+" התמונות שלו"):"")+"?\nלא ניתן לבטל פעולה זו."))return;
+  }
+  z.defects=z.defects.filter(x=>x.id!==did);render();
+}
 function moveDefect(zid,i,dir){const z=findZone(zid);const a=z.defects;const j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();}
 function moveDefectImage(zid,did,i,dir){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;const a=defectImages(d),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();scheduleAutosave();}
 function dupDefect(zid,did){const z=findZone(zid);const i=z.defects.findIndex(x=>x.id===did);if(i<0)return;const c=JSON.parse(JSON.stringify(z.defects[i]));c.id=uid();delete c._busy;z.defects.splice(i+1,0,c);render();scheduleAutosave();}
@@ -1478,12 +1525,13 @@ async function exportData(){
       if(dir){ if(await ensureDirPerm(dir))await saveBackupDir(dir); else dir=null; }
     }
     if(dir&&await ensureDirPerm(dir)){
-      try{await writeBackupToDir(dir,json);flash();return;}
+      try{await writeBackupToDir(dir,json);flash();markBackedUp();return;}
       catch(e){/* התיקייה אינה זמינה יותר — נפילה חיננית להורדה */}
     }
   }
   // דפדפן ללא תמיכה (מובייל/ספארי/פיירפוקס) — הורדה רגילה לתיקיית ההורדות
   downloadBackup(json);
+  markBackedUp();
 }
 // הגדרה/שינוי של תיקיית הגיבוי הקבועה
 async function chooseBackupFolder(){
@@ -1510,18 +1558,18 @@ function buildAppFile(){
 }
 async function shareFile(blob,filename,title,text){
   const file=new File([blob],filename,{type:blob.type});
+  // מחזיר: "shared" (נשלח) / "cancelled" (המשתמש ביטל) / "downloaded" (אין שיתוף — ירד כקובץ)
   if(navigator.canShare&&navigator.canShare({files:[file]})){
-    try{await navigator.share({files:[file],title,text});}catch(e){/* בוטל ע"י המשתמש */}
-    return true;
+    try{await navigator.share({files:[file],title,text});return "shared";}catch(e){return "cancelled";}
   }
   // נפילה חיננית: הורדה (למחשב/דפדפן ללא שיתוף)
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();URL.revokeObjectURL(a.href);
-  return false;
+  return "downloaded";
 }
 async function shareApp(){
   const blob=new Blob([buildAppFile()],{type:"text/html"});
-  const ok=await shareFile(blob,"REPORTpro.html","REPORTpro · פיקוח עליון ובקרה הנדסית","REPORTpro — אפליקציית דוחות פיקוח. פתחו בדפדפן והוסיפו למסך הבית.");
-  if(!ok)alert("האפליקציה הורדה כקובץ. שלחו אותו לעמיתים — הם יפתחו אותו בדפדפן ויוסיפו למסך הבית.");
+  const res=await shareFile(blob,"REPORTpro.html","REPORTpro · פיקוח עליון ובקרה הנדסית","REPORTpro — אפליקציית דוחות פיקוח. פתחו בדפדפן והוסיפו למסך הבית.");
+  if(res==="downloaded")alert("האפליקציה הורדה כקובץ. שלחו אותו לעמיתים — הם יפתחו אותו בדפדפן ויוסיפו למסך הבית.");
 }
 async function downloadApp(){
   const blob=new Blob([buildAppFile()],{type:"text/html"});
@@ -1570,8 +1618,9 @@ async function saveReportFile(){
 async function shareBackup(){
   const data={reports:state.reports,folders:state.folders,templates:state.templates};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
-  const ok=await shareFile(blob,"carmin-backup-"+new Date().toISOString().slice(0,10)+".json","גיבוי דוחות פיקוח","קובץ גיבוי — שחזרו אותו דרך כפתור 'שחזור' באפליקציה.");
-  if(!ok)alert("הגיבוי הורד כקובץ. ניתן לשחזר אותו בכל מכשיר דרך כפתור 'שחזור'.");
+  const res=await shareFile(blob,"carmin-backup-"+new Date().toISOString().slice(0,10)+".json","גיבוי דוחות פיקוח","קובץ גיבוי — שחזרו אותו דרך כפתור 'שחזור' באפליקציה.");
+  if(res!=="cancelled")markBackedUp();
+  if(res==="downloaded")alert("הגיבוי הורד כקובץ. ניתן לשחזר אותו בכל מכשיר דרך כפתור 'שחזור'.");
 }
 document.getElementById("importInput").addEventListener("change",async e=>{
   const file=e.target.files[0];if(!file)return;
