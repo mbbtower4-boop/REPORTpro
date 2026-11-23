@@ -267,8 +267,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.33.0";
+const APP_VERSION="1.33.1";
 const CHANGELOG=[
+  {v:"1.33.1",d:"תיקון: פתיחת דוח לצפייה כבר לא מסמנת אותו כ'עודכן עכשיו' — שמירה מתבצעת רק כשהתוכן באמת השתנה. כך שחזור מגיבוי מהטלפון לא ידלג בטעות על שינויים, ולחיצה על 'דוח חדש' בלי להקליד לא יוצרת דוח ריק"},
   {v:"1.33.0",d:"שחזור מגיבוי מייבא רק דוחות (ותיקיות חסרות) — התבניות במכשיר נשארות קבועות ולא נדרסות; דוח קיים מתעדכן רק אם הגרסה בגיבוי חדשה יותר. ייצוא PDF: שורת התחתית כבר לא יוצרת עמוד נוסף ריק בסוף הדוח"},
   {v:"1.32.0",d:"כל אזור בייצוא הדוח מתחיל בעמוד נפרד — אזור חדש לא מתחיל באמצע עמוד יחד עם אזור קודם (חל גם בהדפסה וגם בייצוא PDF הישיר)"},
   {v:"1.31.0",d:"סידור גרפי של הדוח ב-PDF: מעברי שורה נשמרים בהערות כלליות, סיכום ותיאורי ליקויים; ופריסת ליקוי אחידה — מספור מיושר בעמודה קבועה, התיאור נפרש לכל הרוחב כשאין תמונה, והתמונה בצד קבוע (ללא רווח ריק כשאין תמונה)"},
@@ -665,21 +666,15 @@ async function moveToFolder(rid,fid){
 }
 
 function selectReport(id){state.selectedReportId=(state.selectedReportId===id?null:id);render();}
-function newReport(){state.current=blankReport();state.selectedReportId=state.current.id;go("edit");}
-function editReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));state.selectedReportId=id;go("edit");}
-function printReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));state.selectedReportId=id;go("print");}
+function newReport(){state.current=blankReport();markClean(true);state.selectedReportId=state.current.id;go("edit");}
+function editReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));markClean();state.selectedReportId=id;go("edit");}
+function printReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));markClean();state.selectedReportId=id;go("print");}
 async function dupReport(id){const c=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));c.id=uid();c.createdAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
 async function delReport(id){if(!confirm("למחוק את הדוח?"))return;await DB.del("reports",id);state.reports=state.reports.filter(r=>r.id!==id);render();}
 
 async function persist(){
-  state.current.updatedAt=Date.now();
-  // ניקוי דגלים זמניים שלא צריכים להישמר
-  state.current.zones.forEach(z=>z.defects.forEach(d=>{delete d._busy;}));
-  await DB.put("reports",JSON.parse(JSON.stringify(state.current)));
-  const others=state.reports.filter(r=>r.id!==state.current.id);
-  state.reports=[JSON.parse(JSON.stringify(state.current)),...others].sort((a,b)=>b.updatedAt-a.updatedAt);
+  await autosaveNow(); // שומר רק אם יש שינוי (מעדכן גם את חיווי השמירה)
   maybeRemindBackup();
-  lastSaveAt=Date.now();updateSaveStatus("saved");
   flash();
 }
 // תזכורת גיבוי אחרי כמה שמירות (רשת ביטחון בשטח)
@@ -723,15 +718,26 @@ function scheduleAutosave(){
   clearTimeout(autosaveTimer);
   autosaveTimer=setTimeout(autosaveNow,1200);
 }
+// מעקב שינויים: שומרים (ומעדכנים את "עודכן לאחרונה") רק כשהתוכן באמת השתנה.
+// בלי זה, עצם פתיחת דוח לצפייה סימנה אותו כ"עודכן עכשיו" — מה שגרם לשחזור מגיבוי
+// לדלג על שינויים אמיתיים מהטלפון, ויצר דוחות ריקים בכל לחיצה על "דוח חדש".
+let savedSnap=null;
+function snapOf(r){return JSON.stringify(r,(k,v)=>k==="_busy"?undefined:v);}
+function markClean(isNew){
+  savedSnap=state.current?snapOf(state.current):null;
+  lastSaveAt=(state.current&&!isNew)?(state.current.updatedAt||null):null; // חיווי: מתי הדוח נשמר בפועל
+}
 async function autosaveNow(){
   if(state.view!=="edit"||!state.current)return;
   clearTimeout(autosaveTimer);
   try{
+    if(snapOf(state.current)===savedSnap){updateSaveStatus("saved");return;} // אין שינוי — לא שומרים
     state.current.updatedAt=Date.now();
-    state.current.zones.forEach(z=>z.defects.forEach(d=>{delete d._busy;}));
-    await DB.put("reports",JSON.parse(JSON.stringify(state.current)));
-    const others=state.reports.filter(r=>r.id!==state.current.id);
-    state.reports=[JSON.parse(JSON.stringify(state.current)),...others].sort((a,b)=>b.updatedAt-a.updatedAt);
+    const obj=JSON.parse(snapOf(state.current));
+    await DB.put("reports",obj);
+    savedSnap=JSON.stringify(obj);
+    const others=state.reports.filter(r=>r.id!==obj.id);
+    state.reports=[obj,...others].sort((a,b)=>b.updatedAt-a.updatedAt);
     lastSaveAt=Date.now();updateSaveStatus("saved");flash();
   }catch(e){}
 }
