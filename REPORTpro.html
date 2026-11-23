@@ -273,8 +273,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.34.0";
+const APP_VERSION="1.35.0";
 const CHANGELOG=[
+  {v:"1.35.0",d:"שיפור מהירות משמעותי בדוחות עם הרבה תמונות (בעיקר בטלפון): שמירה מהירה פי 4, לחיצה על חומרה/תמונה מרעננת רק את הליקוי ולא את כל המסך, בדיקת שינויים בזמן הקלדה כמעט ללא עלות, וחיסכון בזיכרון (הנתונים לא מוחזקים פעמיים). הוספת תמונה תוך כדי הקלדה לא מוציאה מתיבת הטקסט"},
   {v:"1.34.0",d:"הגנה על הנתונים ועבודה בשטח: האפליקציה נפתחת ומפיקה PDF גם בלי חיבור לאינטרנט; בקשה מהדפדפן לשמור את הנתונים לצמיתות; חיווי 'גיבוי אחרון' בעמוד הבית ואזהרה כשיש דוחות שלא גובו יותר מיומיים (במקום תזכורת הקופצת); הנחיה באייפון להוספה למסך הבית; ואישור לפני מחיקת אזור/ליקוי שיש בו תוכן"},
   {v:"1.33.1",d:"תיקון: פתיחת דוח לצפייה כבר לא מסמנת אותו כ'עודכן עכשיו' — שמירה מתבצעת רק כשהתוכן באמת השתנה. כך שחזור מגיבוי מהטלפון לא ידלג בטעות על שינויים, ולחיצה על 'דוח חדש' בלי להקליד לא יוצרת דוח ריק"},
   {v:"1.33.0",d:"שחזור מגיבוי מייבא רק דוחות (ותיקיות חסרות) — התבניות במכשיר נשארות קבועות ולא נדרסות; דוח קיים מתעדכן רק אם הגרסה בגיבוי חדשה יותר. ייצוא PDF: שורת התחתית כבר לא יוצרת עמוד נוסף ריק בסוף הדוח"},
@@ -360,6 +361,32 @@ const sevOf=id=>SEVERITIES.find(s=>s.id===id);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const escMulti=s=>esc(s).replace(/\r?\n/g,"<br>");
+// העתקה עמוקה מהירה: משכפלת את מבנה האובייקטים אבל משתפת את המחרוזות עצמן (מחרוזות ב-JS אינן ניתנות לשינוי).
+// תמונה היא מחרוזת של מאות KB — JSON.parse(JSON.stringify(x)) העתיק כל אחת מחדש; כאן היא לא מועתקת בכלל.
+// דגל זמני _busy לא מועתק.
+function deepClone(v){
+  if(Array.isArray(v))return v.map(deepClone);
+  if(v&&typeof v==="object"){const o={};for(const k in v){if(k!=="_busy")o[k]=deepClone(v[k]);}return o;}
+  return v;
+}
+// טביעת אצבע זולה לתמונה (אורך + סוף ה-base64) — להשוואת שינויים בלי לעבור על כל התמונה
+const imgFP=s=>typeof s==="string"?s.length+":"+s.slice(-40):"";
+// תצוגת עורך מהירה: כל תמונה (data URL של מאות KB) מומרת פעם אחת לכתובת blob: קצרה.
+// כך בניית מסך העריכה מחדש לא מעבירה מגה-בייטים של טקסט, והדפדפן משתמש בתמונה שכבר פוענחה.
+// (בתצוגת ההדפסה/PDF וב"שמור כ-HTML" נשארות כתובות data המקוריות — כדי שהקובץ המיוצא יהיה עצמאי.)
+const _thumbs=new Map();
+function thumbURL(src){
+  if(typeof src!=="string"||!src.startsWith("data:"))return src;
+  const fp=imgFP(src);let u=_thumbs.get(fp);if(u)return u;
+  try{
+    const comma=src.indexOf(","),mime=src.slice(5,src.indexOf(";"))||"image/jpeg";
+    const bin=atob(src.slice(comma+1)),u8=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+    u=URL.createObjectURL(new Blob([u8],{type:mime}));
+  }catch(e){return src;}
+  _thumbs.set(fp,u);return u;
+}
+function releaseThumbs(){for(const u of _thumbs.values())URL.revokeObjectURL(u);_thumbs.clear();}
 function nowStamp(){
   const d=new Date(),p=n=>String(n).padStart(2,"0");
   return `${p(d.getDate())}/${p(d.getMonth()+1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
@@ -428,19 +455,26 @@ const DB={ _db:null, broken:false, _opened:false,
     }catch(e){done(null,true);}
   });},
   async all(store){const db=await this.open();
-    if(!db||this.broken)return Object.values(memStore[store]).map(x=>JSON.parse(JSON.stringify(x)));
+    if(!db||this.broken)return Object.values(memStore[store]).map(x=>deepClone(x));
     try{return await new Promise((res,rej)=>{const rq=db.transaction(store,"readonly").objectStore(store).getAll();rq.onsuccess=()=>res(rq.result||[]);rq.onerror=rej;});}
-    catch(e){this.broken=true;return Object.values(memStore[store]).map(x=>JSON.parse(JSON.stringify(x)));}
+    catch(e){this.broken=true;return Object.values(memStore[store]).map(x=>deepClone(x));}
   },
-  async put(store,obj){memStore[store][obj.id]=JSON.parse(JSON.stringify(obj));const db=await this.open();
-    if(!db||this.broken)return;
+  // העותק בזיכרון (memStore) נשמר רק כשהמסד לא זמין — בעבר כל הנתונים (כולל כל התמונות) הוחזקו פעמיים בזיכרון.
+  // אם המסד נכשל באמצע העבודה, מעבירים אליו את כל מה שכבר נטען כדי שלא יאבד דבר במצב הזיכרון.
+  _fallback(){
+    if(this._seeded)return;this._seeded=true;
+    for(const [store,list] of [["reports",state.reports],["folders",state.folders],["templates",state.templates]])
+      for(const x of list||[])if(x&&x.id&&!memStore[store][x.id])memStore[store][x.id]=deepClone(x);
+  },
+  async put(store,obj){const db=await this.open();
+    if(!db||this.broken){this._fallback();memStore[store][obj.id]=deepClone(obj);return;}
     try{return await new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");tx.objectStore(store).put(obj);tx.oncomplete=res;tx.onerror=rej;});}
-    catch(e){this.broken=true;}
+    catch(e){this.broken=true;this._fallback();memStore[store][obj.id]=deepClone(obj);}
   },
-  async del(store,id){delete memStore[store][id];const db=await this.open();
-    if(!db||this.broken)return;
+  async del(store,id){const db=await this.open();
+    if(!db||this.broken){this._fallback();delete memStore[store][id];return;}
     try{return await new Promise((res,rej)=>{const tx=db.transaction(store,"readwrite");tx.objectStore(store).delete(id);tx.oncomplete=res;tx.onerror=rej;});}
-    catch(e){this.broken=true;}
+    catch(e){this.broken=true;this._fallback();delete memStore[store][id];}
   },
 };
 
@@ -515,7 +549,7 @@ function showNoStoreBanner(){
   b.querySelector("button").onclick=()=>b.remove();
   document.body.appendChild(b);
 }
-function go(view){ if(state.view==="edit"&&view!=="edit"&&state.current){autosaveNow();} state.view=view;render();window.scrollTo(0,0);}
+function go(view){ if(state.view==="edit"&&view!=="edit"&&state.current){autosaveNow();} if(view==="home"||view==="templates")releaseThumbs(); state.view=view;render();window.scrollTo(0,0);}
 function flash(){const f=document.getElementById("flash");f.classList.add("show");setTimeout(()=>f.classList.remove("show"),1600);}
 function tplOf(id){return state.templates.find(t=>t.id===id)||state.templates[0]||defaultTemplate();}
 function folderOf(id){return state.folders.find(f=>f.id===id);}
@@ -705,9 +739,9 @@ async function moveToFolder(rid,fid){
 
 function selectReport(id){state.selectedReportId=(state.selectedReportId===id?null:id);render();}
 function newReport(){state.current=blankReport();markClean(true);state.selectedReportId=state.current.id;go("edit");}
-function editReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));markClean();state.selectedReportId=id;go("edit");}
-function printReport(id){state.current=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));markClean();state.selectedReportId=id;go("print");}
-async function dupReport(id){const c=JSON.parse(JSON.stringify(state.reports.find(r=>r.id===id)));c.id=uid();c.createdAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
+function editReport(id){state.current=deepClone(state.reports.find(r=>r.id===id));markClean();state.selectedReportId=id;go("edit");}
+function printReport(id){state.current=deepClone(state.reports.find(r=>r.id===id));markClean();state.selectedReportId=id;go("print");}
+async function dupReport(id){const c=deepClone(state.reports.find(r=>r.id===id));c.id=uid();c.createdAt=Date.now();c.title+=" (עותק)";await DB.put("reports",c);state.reports.unshift(c);render();}
 async function delReport(id){if(!confirm("למחוק את הדוח?"))return;await DB.del("reports",id);state.reports=state.reports.filter(r=>r.id!==id);render();}
 
 async function persist(){
@@ -750,7 +784,8 @@ function scheduleAutosave(){
 // בלי זה, עצם פתיחת דוח לצפייה סימנה אותו כ"עודכן עכשיו" — מה שגרם לשחזור מגיבוי
 // לדלג על שינויים אמיתיים מהטלפון, ויצר דוחות ריקים בכל לחיצה על "דוח חדש".
 let savedSnap=null;
-function snapOf(r){return JSON.stringify(r,(k,v)=>k==="_busy"?undefined:v);}
+// תמונות מיוצגות בטביעת אצבע קצרה — בדיקת "האם השתנה משהו" כמעט חינמית גם בדוח עם עשרות תמונות
+function snapOf(r){return JSON.stringify(r,(k,v)=>k==="_busy"?undefined:(k==="images"&&Array.isArray(v))?v.map(imgFP):v);}
 function markClean(isNew){
   savedSnap=state.current?snapOf(state.current):null;
   lastSaveAt=(state.current&&!isNew)?(state.current.updatedAt||null):null; // חיווי: מתי הדוח נשמר בפועל
@@ -761,9 +796,9 @@ async function autosaveNow(){
   try{
     if(snapOf(state.current)===savedSnap){updateSaveStatus("saved");return;} // אין שינוי — לא שומרים
     state.current.updatedAt=Date.now();
-    const obj=JSON.parse(snapOf(state.current));
+    const obj=deepClone(state.current);
     await DB.put("reports",obj);
-    savedSnap=JSON.stringify(obj);
+    savedSnap=snapOf(obj);
     const others=state.reports.filter(r=>r.id!==obj.id);
     state.reports=[obj,...others].sort((a,b)=>b.updatedAt-a.updatedAt);
     lastSaveAt=Date.now();updateSaveStatus("saved");flash();
@@ -854,7 +889,7 @@ function defectHTML(zid,d,zi,di,total){
   const cats=`<option value="">— ללא —</option>`+CATEGORIES.map(c=>`<option value="${c}" ${d.category===c?"selected":""}>${c}</option>`).join("");
   const fit=(state.current.imageFit||'contain')==='cover'?'cover':'contain';
   const imgs=defectImages(d);
-  const thumbs=imgs.map((src,ii)=>`<div class="img-wrap"><img class="thumb" style="object-fit:${fit};background:#f1f5f9" src="${esc(src)}"><button class="img-remove" title="הסר תמונה" onclick="clearImg('${zid}','${d.id}',${ii})">${I.x}</button>${imgs.length>1?`<div class="img-order"><button title="הקדם תמונה" ${ii===0?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},-1)">${I.up}</button><button title="דחה תמונה" ${ii===imgs.length-1?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},1)">${I.down}</button></div>`:""}</div>`).join("");
+  const thumbs=imgs.map((src,ii)=>`<div class="img-wrap"><img class="thumb" decoding="async" style="object-fit:${fit};background:#f1f5f9" src="${esc(thumbURL(src))}"><button class="img-remove" title="הסר תמונה" onclick="clearImg('${zid}','${d.id}',${ii})">${I.x}</button>${imgs.length>1?`<div class="img-order"><button title="הקדם תמונה" ${ii===0?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},-1)">${I.up}</button><button title="דחה תמונה" ${ii===imgs.length-1?"disabled":""} onclick="event.stopPropagation();moveDefectImage('${zid}','${d.id}',${ii},1)">${I.down}</button></div>`:""}</div>`).join("");
   const gallery=`<div class="img-grid">${thumbs}${d._busy?`<div class="img-ph">מעבד תמונה…</div>`:(imgs.length?"":`<div class="img-ph">${I.imgBig}</div>`)}</div>`;
   return `<div class="defect" data-did="${d.id}" data-zid="${zid}">
     <div class="defect-num-col">
@@ -895,11 +930,27 @@ function bindEdit(){
   document.querySelectorAll('.zone').forEach(zEl=>{
     const z=r.zones.find(x=>x.id===zEl.dataset.zid);
     zEl.querySelectorAll('[data-zfield]').forEach(el=>el.addEventListener('input',()=>{z[el.dataset.zfield]=el.value;scheduleAutosave();}));
-    zEl.querySelectorAll('.defect').forEach(dEl=>{
-      const d=z.defects.find(x=>x.id===dEl.dataset.did);
-      dEl.querySelectorAll('[data-dfield]').forEach(el=>{const ev=el.tagName==="SELECT"?'change':'input';el.addEventListener(ev,()=>{d[el.dataset.dfield]=el.value;scheduleAutosave();});});
-    });
+    zEl.querySelectorAll('.defect').forEach(dEl=>bindDefectEl(dEl,z.defects.find(x=>x.id===dEl.dataset.did)));
   });
+}
+function bindDefectEl(dEl,d){
+  if(!d)return;
+  dEl.querySelectorAll('[data-dfield]').forEach(el=>{const ev=el.tagName==="SELECT"?'change':'input';el.addEventListener(ev,()=>{d[el.dataset.dfield]=el.value;scheduleAutosave();});});
+}
+// רענון ליקוי בודד (במקום בניית כל מסך העריכה מחדש) — לפעולות שמשנות רק ליקוי אחד:
+// חומרה, הוספה/הסרה/סידור תמונה. שומר על הפוקוס והסמן אם המשתמש מקליד באותו ליקוי.
+function rerenderDefect(zid,did){
+  if(state.view!=="edit"||!state.current)return;
+  const z=findZone(zid);const zi=z?state.current.zones.indexOf(z):-1;
+  const di=z?z.defects.findIndex(x=>x.id===did):-1;
+  const el=document.querySelector('.defect[data-did="'+did+'"]');
+  if(di<0||!el){render();return;}
+  const a=document.activeElement,keepField=(a&&el.contains(a)&&a.dataset)?a.dataset.dfield:null;
+  const selS=keepField?a.selectionStart:0,selE=keepField?a.selectionEnd:0;
+  const tmp=document.createElement("div");tmp.innerHTML=defectHTML(zid,z.defects[di],zi,di,z.defects.length);
+  const nel=tmp.firstElementChild;el.replaceWith(nel);bindDefectEl(nel,z.defects[di]);
+  if(keepField){const f=nel.querySelector('[data-dfield="'+keepField+'"]');if(f){f.focus({preventScroll:true});try{f.setSelectionRange(selS,selE);}catch(_){}}}
+  scheduleAutosave();
 }
 function findZone(zid){return state.current.zones.find(z=>z.id===zid);}
 function addZone(){state.current.zones.push(blankZone());render();}
@@ -927,8 +978,8 @@ function delDefect(zid,did){
   z.defects=z.defects.filter(x=>x.id!==did);render();
 }
 function moveDefect(zid,i,dir){const z=findZone(zid);const a=z.defects;const j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();}
-function moveDefectImage(zid,did,i,dir){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;const a=defectImages(d),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];render();scheduleAutosave();}
-function dupDefect(zid,did){const z=findZone(zid);const i=z.defects.findIndex(x=>x.id===did);if(i<0)return;const c=JSON.parse(JSON.stringify(z.defects[i]));c.id=uid();delete c._busy;z.defects.splice(i+1,0,c);render();scheduleAutosave();}
+function moveDefectImage(zid,did,i,dir){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;const a=defectImages(d),j=i+dir;if(j<0||j>=a.length)return;[a[i],a[j]]=[a[j],a[i]];rerenderDefect(zid,did);}
+function dupDefect(zid,did){const z=findZone(zid);const i=z.defects.findIndex(x=>x.id===did);if(i<0)return;const c=deepClone(z.defects[i]);c.id=uid();delete c._busy;z.defects.splice(i+1,0,c);render();scheduleAutosave();}
 
 // ----- גרירת ליקוי: שינוי סדר + העברה בין אזורים (עכבר + מגע) -----
 // מאזינים ברמת window + לכידת מצביע על body (אלמנט יציב שלא זז) — כדי
@@ -1039,8 +1090,8 @@ function defectDragEnd(){
   dragState=null;
   if(moved){rebuildDefectOrderFromDOM();render();} // עדכון מספור (1.1, 1.2…) + שמירה אוטומטית
 }
-function toggleSev(zid,did,sid){const d=findZone(zid).defects.find(x=>x.id===did);d.severity=d.severity===sid?"":sid;render();}
-function clearImg(zid,did,idx){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;defectImages(d).splice(idx,1);render();scheduleAutosave();}
+function toggleSev(zid,did,sid){const d=findZone(zid).defects.find(x=>x.id===did);d.severity=d.severity===sid?"":sid;rerenderDefect(zid,did);}
+function clearImg(zid,did,idx){const d=findZone(zid).defects.find(x=>x.id===did);if(!d)return;defectImages(d).splice(idx,1);rerenderDefect(zid,did);}
 function pickImg(zid,did,cam){pendingImg={zid,did};document.getElementById(cam?"camInput":"fileInput").click();}
 async function handleFile(input){
   const files=input.files?Array.from(input.files):[];input.value="";
@@ -1048,7 +1099,7 @@ async function handleFile(input){
   const pend=pendingImg;pendingImg=null;
   const d0=findZone(pend.zid)&&findZone(pend.zid).defects.find(x=>x.id===pend.did);
   if(!d0)return;
-  d0._busy=true;render();
+  d0._busy=true;rerenderDefect(pend.zid,pend.did);
   let heicFail=false,otherFail=false;
   for(const file of files){
     try{
@@ -1061,7 +1112,7 @@ async function handleFile(input){
   }
   const dd=findZone(pend.zid).defects.find(x=>x.id===pend.did);
   if(dd)dd._busy=false;
-  render();scheduleAutosave();
+  rerenderDefect(pend.zid,pend.did);
   if(heicFail)alert("תמונת HEIC אינה נתמכת בדפדפן זה. ב-iPhone: הגדרות › מצלמה › פורמטים › 'תואם ביותר' (JPEG), או שתפו/המירו את התמונה ל-JPEG ונסו שוב.");
   else if(otherFail)alert("חלק מהתמונות לא עובדו. נסו שוב או בחרו תמונה אחרת.");
 }
@@ -1073,7 +1124,7 @@ let pasteTarget=null;
 async function applyPaste(blob,zid,did){
   const z=findZone(zid);const d=z&&z.defects.find(x=>x.id===did);
   if(!d)return;
-  d._busy=true;render();
+  d._busy=true;rerenderDefect(zid,did);
   try{
     const file=new File([blob],"paste.png",{type:blob.type||"image/png"});
     const data=await compressImage(file);
@@ -1082,7 +1133,7 @@ async function applyPaste(blob,zid,did){
   }catch(err){
     alert("לא ניתן היה לעבד את התמונה שהודבקה.");
   }finally{
-    const dd=findZone(zid).defects.find(x=>x.id===did);if(dd)dd._busy=false;render();scheduleAutosave();
+    const dd=findZone(zid).defects.find(x=>x.id===did);if(dd)dd._busy=false;rerenderDefect(zid,did);
   }
 }
 function pasteImg(zid,did){
@@ -1221,8 +1272,8 @@ async function setDefaultTemplate(id){
   for(const t of state.templates){const was=t.isDefault;t.isDefault=(t.id===id);if(was!==t.isDefault)await DB.put("templates",t);}
   render();
 }
-function editTemplate(id){state.currentTpl=JSON.parse(JSON.stringify(state.templates.find(t=>t.id===id)));go("templateEdit");}
-async function dupTemplate(id){const c=JSON.parse(JSON.stringify(state.templates.find(t=>t.id===id)));c.id=uid();c.name+=" (עותק)";await DB.put("templates",c);state.templates.push(c);render();}
+function editTemplate(id){state.currentTpl=deepClone(state.templates.find(t=>t.id===id));go("templateEdit");}
+async function dupTemplate(id){const c=deepClone(state.templates.find(t=>t.id===id));c.id=uid();c.name+=" (עותק)";await DB.put("templates",c);state.templates.push(c);render();}
 async function delTemplate(id){
   if(!confirm("למחוק את התבנית? דוחות שמשתמשים בה יעברו לתבנית ברירת המחדל."))return;
   await DB.del("templates",id);
@@ -1366,7 +1417,7 @@ function bindTemplateEdit(){
     });
   });
 }
-async function saveTemplate(){await DB.put("templates",JSON.parse(JSON.stringify(state.currentTpl)));const others=state.templates.filter(t=>t.id!==state.currentTpl.id);state.templates=[...others,JSON.parse(JSON.stringify(state.currentTpl))];flash();go("templates");}
+async function saveTemplate(){await DB.put("templates",deepClone(state.currentTpl));const others=state.templates.filter(t=>t.id!==state.currentTpl.id);state.templates=[...others,deepClone(state.currentTpl)];flash();go("templates");}
 function clearLogo(){state.currentTpl.logo="";render();bindTemplateEdit();}
 function clearSignature(){state.currentTpl.signature="";render();bindTemplateEdit();}
 async function applyLogoImage(file){
