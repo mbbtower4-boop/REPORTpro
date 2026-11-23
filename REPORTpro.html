@@ -267,8 +267,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.32.0";
+const APP_VERSION="1.33.0";
 const CHANGELOG=[
+  {v:"1.33.0",d:"שחזור מגיבוי מייבא רק דוחות (ותיקיות חסרות) — התבניות במכשיר נשארות קבועות ולא נדרסות; דוח קיים מתעדכן רק אם הגרסה בגיבוי חדשה יותר. ייצוא PDF: שורת התחתית כבר לא יוצרת עמוד נוסף ריק בסוף הדוח"},
   {v:"1.32.0",d:"כל אזור בייצוא הדוח מתחיל בעמוד נפרד — אזור חדש לא מתחיל באמצע עמוד יחד עם אזור קודם (חל גם בהדפסה וגם בייצוא PDF הישיר)"},
   {v:"1.31.0",d:"סידור גרפי של הדוח ב-PDF: מעברי שורה נשמרים בהערות כלליות, סיכום ותיאורי ליקויים; ופריסת ליקוי אחידה — מספור מיושר בעמודה קבועה, התיאור נפרש לכל הרוחב כשאין תמונה, והתמונה בצד קבוע (ללא רווח ריק כשאין תמונה)"},
   {v:"1.30.0",d:"שדה 'תפוצה' בפרטי הדוח הפך לתיבת טקסט רב-שורתית — ניתן להזין כמה שורות (למשל נמענים שונים), והן מוצגות בהתאם ב-PDF"},
@@ -1570,16 +1571,39 @@ document.getElementById("importInput").addEventListener("change",async e=>{
   const file=e.target.files[0];if(!file)return;
   try{
     const data=JSON.parse(await file.text());
-    const reports=Array.isArray(data)?data:(data.reports||[]);
-    const folders=data.folders||[];const templates=data.templates||[];
-    for(const r of reports)if(r&&r.id)await DB.put("reports",r);
-    for(const f of folders)if(f&&f.id)await DB.put("folders",f);
-    for(const t of templates)if(t&&t.id)await DB.put("templates",t);
+    const reports=(Array.isArray(data)?data:(data.reports||[])).filter(r=>r&&r.id);
+    const folders=(data.folders||[]).filter(f=>f&&f.id);
+    const templates=(data.templates||[]).filter(t=>t&&t.id);
+    normalizeReports(reports);
+    // התבניות במכשיר הזה קבועות: לעולם לא נדרסות בשחזור.
+    // תבנית מהגיבוי נוספת רק אם היא חסרה כאן וגם דוח מיובא משתמש בה (למשל שחזור למכשיר חדש).
+    const localTpl=new Set(state.templates.map(t=>t.id));
+    const usedTpl=new Set(reports.map(r=>r.templateId));
+    let tplAdded=0;
+    for(const t of templates){
+      if(localTpl.has(t.id)||!usedTpl.has(t.id))continue;
+      await DB.put("templates",t);localTpl.add(t.id);tplAdded++;
+    }
+    // תיקיות: מוסיפים רק תיקיות חסרות — שם/צבע של תיקייה קיימת לא משתנים
+    const localFolders=new Set(state.folders.map(f=>f.id));
+    let fAdded=0;
+    for(const f of folders){if(localFolders.has(f.id))continue;await DB.put("folders",f);fAdded++;}
+    // דוחות: חדש נוסף; קיים מתעדכן רק אם הגרסה בגיבוי חדשה יותר מזו שבמכשיר
+    const localById=new Map(state.reports.map(r=>[r.id,r]));
+    const fallbackTpl=getDefaultTemplate().id;
+    let rNew=0,rUpd=0,rSkip=0;
+    for(const r of reports){
+      if(!localTpl.has(r.templateId))r.templateId=fallbackTpl;
+      const cur=localById.get(r.id);
+      if(cur&&(cur.updatedAt||0)>=(r.updatedAt||0)){rSkip++;continue;}
+      await DB.put("reports",r);cur?rUpd++:rNew++;
+    }
     state.reports=await DB.all("reports");state.folders=await DB.all("folders");state.templates=await DB.all("templates");
     if(state.templates.length===0){const d=defaultTemplate();await DB.put("templates",d);state.templates=[d];}
     normalizeReports(state.reports);
     state.reports.sort((a,b)=>b.updatedAt-a.updatedAt);
-    render();alert("השחזור הושלם: "+reports.length+" דוחות, "+folders.length+" תיקיות, "+templates.length+" תבניות.");
+    render();
+    alert("הייבוא הושלם:\n• "+rNew+" דוחות חדשים\n• "+rUpd+" דוחות עודכנו"+(rSkip?"\n• "+rSkip+" דוחות דולגו (הגרסה במכשיר זה עדכנית יותר או זהה)":"")+(fAdded?"\n• "+fAdded+" תיקיות חדשות":"")+"\n\nהתבניות במכשיר זה לא שונו"+(tplAdded?" (נוספו "+tplAdded+" תבניות חסרות שהדוחות משתמשים בהן)":"")+".");
   }catch(err){alert("הקובץ אינו תקין.");}
   e.target.value="";
 });
@@ -1672,29 +1696,47 @@ async function exportPDF(){
     return;
   }
   const prevWidth=doc.style.width;
+  const foot=doc.querySelector(".doc-footer");
+  const prevFootDisplay=foot?foot.style.display:"";
   try{
     showBusyOverlay("מפיק PDF…");
     try{if(document.fonts&&document.fonts.ready)await document.fonts.ready;}catch(e){}
     // רוחב קבוע לרינדור עקבי של ה-PDF ללא תלות ברוחב המסך/המכשיר (מונע פריסת מובייל ועמודים שגויים)
     doc.style.width="760px";
     const scale=doc.scrollHeight*2>30000?Math.max(1,Math.floor(30000/doc.scrollHeight)):2;
-    const canvas=await h2c(doc,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900,windowHeight:Math.max(doc.scrollHeight+120,1200)});
     const pdf=new jsPDFctor({unit:"pt",format:"a4",orientation:"portrait"});
     const pageW=pdf.internal.pageSize.getWidth(),pageH=pdf.internal.pageSize.getHeight();
     const margin=28,contentW=pageW-margin*2;
+    const ptPerCss=contentW/doc.getBoundingClientRect().width;
+    // שורת התחתית ("כל הזכויות שמורות / הופק בתאריך") מצולמת בנפרד ומודבקת מתחת לתוכן בעמוד האחרון.
+    // לכן היא לעולם לא נדחקת לבדה לעמוד נוסף ריק; בכל עמוד נשמר עבורה מקום בתחתית.
+    let footImg=null,footW=0,footH=0,footX=margin,footGap=0;
+    if(foot){
+      const dr=doc.getBoundingClientRect(),fr=foot.getBoundingClientRect();
+      const fc=await h2c(foot,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900});
+      footImg=fc.toDataURL("image/jpeg",0.9);
+      footW=fr.width*ptPerCss;footH=fr.height*ptPerCss;footX=margin+(fr.left-dr.left)*ptPerCss;
+      footGap=(parseFloat(getComputedStyle(foot).marginTop)||16)*ptPerCss;
+      foot.style.display="none";
+    }
+    const canvas=await h2c(doc,{scale,backgroundColor:"#ffffff",useCORS:true,logging:false,windowWidth:900,windowHeight:Math.max(doc.scrollHeight+120,1200)});
     const pxPerPt=canvas.width/contentW;
-    const pageContentHpx=(pageH-margin*2)*pxPerPt;
+    const pageContentHpx=(pageH-margin*2-(footImg?footH+footGap:0))*pxPerPt;
     // נקודות חיתוך מועדפות: תחתית כל בלוק, כדי לא לחתוך ליקוי/תמונה באמצע העמוד
     const base=doc.getBoundingClientRect().top;
+    // חיתוך התחתית בסוף התוכן האמיתי — כדי שריווח פנימי בתחתית לא ייצור "פירור" של עמוד ריק
+    let contentBottom=0;
+    [...doc.children].forEach(el=>{if(getComputedStyle(el).display!=="none")contentBottom=Math.max(contentBottom,el.getBoundingClientRect().bottom-base);});
     const bounds=[];
-    doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect,.doc-summary,.doc-signwrap,.doc-footer").forEach(el=>{bounds.push((el.getBoundingClientRect().bottom-base)*scale);});
+    doc.querySelectorAll(".doc-header,.doc-title-box,.meta-table,.doc-note,.doc-zone-title,.doc-defect,.doc-summary,.doc-signwrap").forEach(el=>{bounds.push((el.getBoundingClientRect().bottom-base)*scale);});
     bounds.sort((a,b)=>a-b);
     // שבירות עמוד כפויות: תחילת כל אזור חדש (מלבד הראשון) — כדי שכל אזור יתחיל בעמוד נפרד
     const forced=[];
     doc.querySelectorAll(".doc-zone.zone-break").forEach(el=>{forced.push((el.getBoundingClientRect().top-base)*scale);});
     forced.sort((a,b)=>a-b);
     const pc=document.createElement("canvas"),ctx=pc.getContext("2d");
-    let startPx=0,first=true;const total=canvas.height;
+    let startPx=0,first=true,lastSliceH=0;
+    const total=contentBottom>0?Math.min(canvas.height,Math.ceil((contentBottom+6)*scale)):canvas.height;
     while(startPx<total-1){
       let endPx=Math.min(startPx+pageContentHpx,total);
       // שבירה כפויה לפני אזור חדש קודמת לחיתוך המועדף.
@@ -1710,13 +1752,18 @@ async function exportPDF(){
       ctx.drawImage(canvas,0,startPx,canvas.width,sliceH,0,0,canvas.width,sliceH);
       if(!first)pdf.addPage();first=false;
       pdf.addImage(pc.toDataURL("image/jpeg",0.82),"JPEG",margin,margin,contentW,sliceH/pxPerPt,undefined,"FAST");
+      lastSliceH=sliceH;
       startPx=endPx;
     }
+    // שורת התחתית — מיד מתחת לתוכן בעמוד האחרון (המקום עבורה שמור מראש, כך שאין עמוד נוסף)
+    if(footImg)pdf.addImage(footImg,"JPEG",footX,margin+lastSliceH/pxPerPt+footGap,footW,footH,undefined,"FAST");
+    if(foot)foot.style.display=prevFootDisplay;
     doc.style.width=prevWidth;
     const blob=pdf.output("blob");
     hideBusyOverlay();
     await saveBlob(blob,safeName(state.current.title+" "+(state.current.date||""))+".pdf","application/pdf",".pdf");
   }catch(err){
+    if(foot)foot.style.display=prevFootDisplay;
     doc.style.width=prevWidth;
     hideBusyOverlay();
     if(confirm("אירעה שגיאה בהפקת ה-PDF. לפתוח את חלון ההדפסה של הדפדפן במקום?"))window.print();
