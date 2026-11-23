@@ -199,13 +199,13 @@
   .doc-defect-num{font-family:var(--font-head);font-weight:800;color:var(--blue);font-size:15px;line-height:1.6;min-width:30px;flex-shrink:0}
   .doc-tags{display:flex;gap:8px;margin-top:10px}
   .doc-tag{font-size:12px;font-weight:700;padding:4px 12px;border-radius:8px;border:1.5px solid}
-  .doc-summary{margin-top:28px;border:2px solid var(--blue);border-radius:10px;padding:20px;break-inside:avoid}
-  .doc-summary-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--blue);text-align:center;margin:0 0 12px}
-  .doc-signwrap{margin-top:30px;text-align:left;break-inside:avoid}
+  .doc-summary{margin-top:18px;border:2px solid var(--blue);border-radius:10px;padding:12px 20px 14px;break-inside:avoid}
+  .doc-summary-title{font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--blue);text-align:center;margin:0 0 6px}
+  .doc-signwrap{margin-top:16px;text-align:left;break-inside:avoid}
   .doc-sign{display:inline-block;text-align:left}
   .doc-sign-name{font-family:var(--font-head);font-weight:700;font-size:15px}
   .doc-sign-line{font-size:12.5px;color:#475569}
-  .doc-footer{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:20px;padding-top:14px;border-top:2px solid var(--blue)}
+  .doc-footer{text-align:center;font-size:11.5px;color:#94a3b8;margin-top:12px;padding-top:8px;border-top:2px solid var(--blue)}
 
   #lightbox{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:20px}
   .lb-img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.5);cursor:default}
@@ -223,8 +223,8 @@
     /* כל אזור (מלבד הראשון) מתחיל בעמוד חדש */
     .doc-zone.zone-break{break-before:page;page-break-before:always}
     /* מניעת עמוד ריק בסוף: ביטול מרווחים תחתונים בסוף המסמך */
-    .doc-signwrap{margin-top:22px}
-    .doc-footer{margin-top:12px;padding-top:10px;margin-bottom:0}
+    .doc-signwrap{margin-top:16px}
+    .doc-footer{margin-top:12px;padding-top:8px;margin-bottom:0}
     .print-doc>*:last-child{margin-bottom:0!important}
     .container>*:last-child,.container{margin-bottom:0!important}
     @page{
@@ -268,8 +268,9 @@
    ============================================================ */
 
 /* ===== מספר גרסה — מתקדם בכל עדכון ===== */
-const APP_VERSION="1.36.0";
+const APP_VERSION="1.36.1";
 const CHANGELOG=[
+  {v:"1.36.1",d:"PDF: בלוק הסיום (סיכום, חתימה ושורת התחתית) קומפקטי יותר, ואם הוא חורג רק בכמה מילימטרים הוא נכנס לשוליים התחתונים — כך הסיכום נכנס בתחתית העמוד האחרון במקום לפתוח עמוד נוסף"},
   {v:"1.36.0",d:"ייצוא PDF חדש: כל עמוד מצויר בנפרד ברזולוציה גבוהה (~300 DPI) — חד יותר בהדפסה ועובד גם בדוחות ארוכים באייפון; הסיכום, החתימה ושורת התחתית נשארים תמיד יחד (החתימה לא 'נתקעת' לבד בעמוד האחרון), וללא שאריות קווי מסגרת בין עמודים. דוח חדש ממשיך מהדוח המסומן (או האחרון בתיקייה): פרטי הדוח, שמות האזורים והסיכום מולאו מראש. ניקוי קוד ותיקונים קטנים"},
   {v:"1.35.0",d:"שיפור מהירות משמעותי בדוחות עם הרבה תמונות (בעיקר בטלפון): שמירה מהירה פי 4, לחיצה על חומרה/תמונה מרעננת רק את הליקוי ולא את כל המסך, בדיקת שינויים בזמן הקלדה כמעט ללא עלות, וחיסכון בזיכרון (הנתונים לא מוחזקים פעמיים). הוספת תמונה תוך כדי הקלדה לא מוציאה מתיבת הטקסט"},
   {v:"1.34.0",d:"הגנה על הנתונים ועבודה בשטח: האפליקציה נפתחת ומפיקה PDF גם בלי חיבור לאינטרנט; בקשה מהדפדפן לשמור את הנתונים לצמיתות; חיווי 'גיבוי אחרון' בעמוד הבית ואזהרה כשיש דוחות שלא גובו יותר מיומיים (במקום תזכורת הקופצת); הנחיה באייפון להוספה למסך הבית; ואישור לפני מחיקת אזור/ליקוי שיש בו תוכן"},
@@ -1846,9 +1847,12 @@ async function exportPDF(){
     const summaryEl=doc.querySelector(".doc-summary");
     const closingTop=summaryEl?rel(summaryEl).t-3:contentBottom;
     // 1) קביעת העמודים מראש (בלי לצייר כלום)
+    // סובלנות לעמוד האחרון: אם כל השארית חורגת רק במעט (עד 14pt ≈ 5 מ"מ), היא נכנסת לשוליים התחתונים
+    // (נשארים ~5 מ"מ שוליים) במקום לפתוח עמוד נוסף בשביל כמה מילימטרים.
+    const lastSlack=14/ptPerCss;
     const pages=[];let start=0;
     while(start<contentBottom-1){
-      let end=Math.min(start+cap,contentBottom);
+      let end=(contentBottom-start<=cap+lastSlack)?contentBottom:Math.min(start+cap,contentBottom);
       const fb=forced.find(f=>f>start+36&&f<=end);
       if(fb!==undefined)end=fb;
       else if(end<contentBottom){
